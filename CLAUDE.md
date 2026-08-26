@@ -79,5 +79,7 @@ npm run build        # tsc -b && vite build
 - Каждая фича — отдельная ветка от `development`: `feature/<кратко>`, `fix/<кратко>`.
 - Коммиты подписываются почтой **`ersaim.adilet@yandex.kz`** (локальный `user.email` уже
   прописан в репозитории, не перезаписывать глобальным).
+- **Сообщения коммитов — на английском**, в императиве: `add series score component`, а не
+  `added changes`. Трейлеры об авторстве ИИ не добавляются.
 - Мердж: `feature/*` → `development` → `main`.
 - Перед PR: `npm run lint && npm run typecheck && npm test && npm run build`.
