@@ -9,11 +9,18 @@ import {
   YAxis,
 } from 'recharts'
 
-import type { PredictionPoint } from '@/api/types'
+import type { PredictionPoint, TimelineEvent } from '@/api/types'
+import { KIND, beneficiaryIsRadiant, chartMarkers } from '@/lib/timeline'
 import { formatPercent } from '@/lib/utils'
 
-/** F2: probability curve over the course of the map. */
-export function ProbabilityChart({ curve }: { curve: PredictionPoint[] }) {
+/** F2: probability curve over the course of the map, with key events on the same time axis. */
+export function ProbabilityChart({
+  curve,
+  events = [],
+}: {
+  curve: PredictionPoint[]
+  events?: TimelineEvent[]
+}) {
   if (curve.length === 0) {
     return <p className="py-12 text-center text-sm text-neutral-500">Прогнозов пока нет</p>
   }
@@ -37,6 +44,28 @@ export function ProbabilityChart({ curve }: { curve: PredictionPoint[] }) {
         />
         {/* The coin-flip line: everything above it favours Radiant. */}
         <ReferenceLine y={0.5} stroke="#404040" strokeDasharray="4 4" />
+        {/* Events on the same axis as the curve: the point of the card is seeing *why* the
+            line moved, and a separate list makes the reader do that join by eye. */}
+        {chartMarkers(events).map((event, index) => {
+            const radiant = beneficiaryIsRadiant(event)
+          return (
+            <ReferenceLine
+              key={`${event.time}-${index}`}
+              x={event.minute}
+              stroke={radiant === null ? '#525252' : radiant ? '#2c6b40' : '#8e2a20'}
+              strokeDasharray="2 3"
+              // A glyph rather than a word: two events a couple of minutes apart are closer
+              // together than "казармы" is wide, and the labels smeared into each other. The
+              // list underneath carries the wording; here the mark only has to be findable.
+              label={{
+                value: KIND[event.kind]?.glyph ?? '•',
+                position: 'top',
+                fill: radiant === null ? '#737373' : radiant ? '#3f9b5b' : '#c0392b',
+                fontSize: 13,
+              }}
+            />
+          )
+        })}
         <Tooltip
           contentStyle={{ background: '#0a0a0a', border: '1px solid #262626', borderRadius: 6 }}
           formatter={(value: number) => [formatPercent(value, 1), 'Radiant']}

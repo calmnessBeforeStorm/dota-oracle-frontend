@@ -35,3 +35,19 @@ export function formatDateRange(from: string | null, to: string | null): string 
   if (!end || start.toDateString() === end.toDateString()) return DAY_MONTH.format(start)
   return `${DAY_MONTH.format(start)} — ${DAY_MONTH.format(end)}`
 }
+
+/**
+ * Valve serves hero portraits from its own CDN; the backend stores only the path, because
+ * the host has changed before and the join belongs where it can be changed in one place.
+ */
+const STEAM_CDN = 'https://cdn.cloudflare.steamstatic.com'
+
+export function heroImageUrl(path: string | null): string | null {
+  return path ? `${STEAM_CDN}${path}` : null
+}
+
+/** Net worth is only ever compared, so thousands are enough and the column stays narrow. */
+export function formatNetWorth(value: number | null): string {
+  if (value === null) return '—'
+  return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value)
+}

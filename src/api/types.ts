@@ -37,6 +37,54 @@ export interface PredictionPoint {
   predicted_at: string
 }
 
+export interface MatchPlayerBrief {
+  player_slot: number
+  is_radiant: boolean
+  hero_id: number | null
+  hero_name: string | null
+  hero_image: string | null
+  account_id: number | null
+  /** Null for players with no pro profile - shown as a dash, never as the account id. */
+  player_name: string | null
+  kills: number | null
+  deaths: number | null
+  assists: number | null
+  last_hits: number | null
+  denies: number | null
+  net_worth: number | null
+  gold_per_min: number | null
+  xp_per_min: number | null
+}
+
+export interface DraftEntry {
+  order: number
+  is_pick: boolean
+  is_radiant: boolean
+  hero_id: number
+  hero_name: string | null
+  hero_image: string | null
+}
+
+/** Valve's event vocabulary, already decoded by the backend into something labellable. */
+export type TimelineKind =
+  | 'tower'
+  | 'barracks'
+  | 'ancient'
+  | 'roshan'
+  | 'aegis'
+  | 'first_blood'
+  | 'tormentor'
+
+export interface TimelineEvent {
+  /** Seconds from the horn; negative before it. */
+  time: number
+  minute: number
+  kind: TimelineKind
+  /** For a building, the side that LOST it. For roshan and first blood, who did it. */
+  is_radiant: boolean | null
+  lane: string | null
+}
+
 export interface MatchDetail {
   match_id: number
   radiant: TeamBrief
@@ -45,6 +93,9 @@ export interface MatchDetail {
   is_live: boolean
   radiant_win: boolean | null
   curve: PredictionPoint[]
+  players: MatchPlayerBrief[]
+  draft: DraftEntry[]
+  timeline: TimelineEvent[]
 }
 
 export interface ModelMetrics {
