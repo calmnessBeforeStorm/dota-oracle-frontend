@@ -5,7 +5,10 @@ import { createRoute } from '@tanstack/react-router'
 import { matchDetailQuery } from '@/api/queries'
 import type { PredictionPoint } from '@/api/types'
 import { subscribeToMatch } from '@/api/ws'
+import { DraftStrip } from '@/components/DraftStrip'
+import { EventTimeline } from '@/components/EventTimeline'
 import { ProbabilityChart } from '@/components/ProbabilityChart'
+import { Roster } from '@/components/Roster'
 import { SeriesScore } from '@/components/SeriesScore'
 import { WinProbabilityBar } from '@/components/WinProbabilityBar'
 import { rootRoute } from './root'
@@ -65,8 +68,41 @@ function MatchPage() {
 
       <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
         <h2 className="mb-4 text-sm text-neutral-400">Вероятность победы Radiant по минутам</h2>
-        <ProbabilityChart curve={curve} />
+        <ProbabilityChart curve={curve} events={data.timeline} />
       </section>
+
+      <DraftStrip draft={data.draft} />
+
+      {data.players.length > 0 && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Roster
+            players={data.players.filter((p) => p.is_radiant)}
+            side="radiant"
+            teamName={data.radiant.name}
+          />
+          <Roster
+            players={data.players.filter((p) => !p.is_radiant)}
+            side="dire"
+            teamName={data.dire.name}
+          />
+        </div>
+      )}
+
+      {data.timeline.length > 0 && (
+        <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+          <h2 className="mb-2 text-sm text-neutral-400">
+            Ключевые события{' '}
+            <span className="text-neutral-600">
+              · {data.timeline.length}, время от гонга
+            </span>
+          </h2>
+          {/* Capped and scrollable: a long map produces dozens of events, and letting them
+              push the chart and rosters off the screen inverts what the card is for. */}
+          <div className="max-h-80 overflow-y-auto pr-1">
+            <EventTimeline events={data.timeline} />
+          </div>
+        </section>
+      )}
     </article>
   )
 }
