@@ -20,11 +20,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5273,
     proxy: {
       // Dev proxy: the SPA talks to the FastAPI container without CORS juggling.
-      '/api': { target: 'http://localhost:8000', changeOrigin: true },
-      '/ws': { target: 'ws://localhost:8000', ws: true },
+      // 8100, not 8000: the stock ports are commonly taken by other projects.
+      '/api': { target: 'http://localhost:8100', changeOrigin: true },
+      '/ws': { target: 'ws://localhost:8100', ws: true },
     },
   },
   test: {

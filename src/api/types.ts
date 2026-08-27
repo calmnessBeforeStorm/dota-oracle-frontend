@@ -1,6 +1,6 @@
 /**
  * Mirrors app/schemas/common.py on the backend. Regenerating these from the OpenAPI schema
- * (localhost:8000/openapi.json) is the plan once the contract settles.
+ * (localhost:8100/openapi.json) is the plan once the contract settles.
  */
 import type { Series } from '@/lib/series'
 

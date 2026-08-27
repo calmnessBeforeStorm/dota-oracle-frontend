@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Откроется `http://localhost:5173`. Запросы `/api` и `/ws` проксируются на `http://localhost:8000`,
+Откроется `http://localhost:5273`. Запросы `/api` и `/ws` проксируются на `http://localhost:8100`,
 поэтому параллельно должен быть поднят бэкенд (`docker compose up` в `dota-oracle-backend`).
 
 ## Переменные окружения

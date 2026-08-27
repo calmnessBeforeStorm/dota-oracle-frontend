@@ -12,7 +12,7 @@ code-based дерево) · Tailwind CSS · Recharts · нативный WebSock
 ## Текущее состояние
 
 Фаза 0 («Скелет») по §11. Каркас F1–F6 есть, данные приходят пустыми, пока не готовы
-соответствующие фазы бэкенда. Дев-сервер проксирует `/api` и `/ws` на `localhost:8000`.
+соответствующие фазы бэкенда. Дев-сервер проксирует `/api` и `/ws` на `localhost:8100`.
 
 ## Карта репозитория
 
@@ -56,13 +56,13 @@ src/
 6. **Метрики модели показывать по срезам минут.** Усреднённая цифра врёт: на 40-й минуте
    задача тривиальна (§7.2). Страница `accuracy` устроена именно так.
 7. **Типы API — зеркало бэкенда.** При изменении схем править `src/api/types.ts` в том же PR;
-   источник истины — `localhost:8000/openapi.json`.
+   источник истины — `localhost:8100/openapi.json`.
 
 ## Команды
 
 ```bash
 npm install
-npm run dev          # localhost:5173, /api и /ws проксируются на localhost:8000
+npm run dev          # localhost:5273, /api и /ws проксируются на localhost:8100
 npm test             # vitest
 npm run lint         # eslint
 npm run typecheck    # tsc --noEmit
