@@ -1,7 +1,13 @@
 import { queryOptions } from '@tanstack/react-query'
 
 import { apiGet } from './client'
-import type { LiveMatch, MatchDetail, ModelMetrics } from './types'
+import type {
+  LiveMatch,
+  MatchDetail,
+  ModelMetrics,
+  TournamentDetail,
+  TournamentSummary,
+} from './types'
 
 export const liveMatchesQuery = () =>
   queryOptions({
@@ -25,9 +31,16 @@ export const modelMetricsQuery = () =>
     staleTime: 5 * 60_000,
   })
 
-export const tournamentsQuery = (status: 'current' | 'upcoming' | 'past') =>
+export const tournamentsQuery = (status: 'current' | 'upcoming' | 'past' | 'all') =>
   queryOptions({
     queryKey: ['tournaments', status],
-    queryFn: () => apiGet<unknown[]>('/tournaments', { status }),
+    queryFn: () => apiGet<TournamentSummary[]>('/tournaments', { status }),
+    staleTime: 10 * 60_000,
+  })
+
+export const tournamentDetailQuery = (leagueId: number) =>
+  queryOptions({
+    queryKey: ['tournaments', leagueId],
+    queryFn: () => apiGet<TournamentDetail>(`/tournaments/${leagueId}`),
     staleTime: 10 * 60_000,
   })

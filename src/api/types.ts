@@ -2,7 +2,7 @@
  * Mirrors app/schemas/common.py on the backend. Regenerating these from the OpenAPI schema
  * (localhost:8100/openapi.json) is the plan once the contract settles.
  */
-import type { Series } from '@/lib/series'
+import type { Series, SeriesFormat } from '@/lib/series'
 
 export interface TeamBrief {
   team_id: number | null
@@ -51,4 +51,37 @@ export interface ModelMetrics {
   brier_by_minute: Record<string, number>
   ece: number
   sample_size: number
+}
+
+export interface TournamentStageInfo {
+  stage_id: number
+  name: string
+  stage_type: string
+  /** Bo2 is only expressible because it comes from Liquipedia; Valve data cannot state it. */
+  default_format: SeriesFormat | null
+  starts_at: string | null
+  ends_at: string | null
+  series: number
+}
+
+export interface TournamentSummary {
+  league_id: number
+  name: string | null
+  tier: string
+  is_lan: boolean | null
+  prize_pool: number | null
+  liquipedia_slug: string | null
+  first_match: string | null
+  last_match: string | null
+  maps: number
+  stages: number
+  status: 'current' | 'upcoming' | 'past'
+}
+
+export interface TournamentDetail extends Omit<TournamentSummary, 'stages'> {
+  stages: TournamentStageInfo[]
+  series_total: number
+  series_drawn: number
+  /** Series whose stage could not be determined, so the format is still unknown. */
+  series_without_format: number
 }

@@ -17,3 +17,21 @@ export function formatGameTime(seconds: number): string {
 export function formatPercent(p: number, digits = 0): string {
   return `${(p * 100).toFixed(digits)}%`
 }
+
+/** Prize pools are large and only the magnitude matters in a list. */
+export function formatPrizePool(amount: number | null): string {
+  if (amount === null) return '—'
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(amount % 1_000_000 ? 1 : 0)}M`
+  if (amount >= 1_000) return `$${Math.round(amount / 1_000)}K`
+  return `$${amount}`
+}
+
+const DAY_MONTH = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' })
+
+export function formatDateRange(from: string | null, to: string | null): string {
+  if (!from) return '—'
+  const start = new Date(from)
+  const end = to ? new Date(to) : null
+  if (!end || start.toDateString() === end.toDateString()) return DAY_MONTH.format(start)
+  return `${DAY_MONTH.format(start)} — ${DAY_MONTH.format(end)}`
+}
