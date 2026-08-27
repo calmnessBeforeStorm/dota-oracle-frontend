@@ -10,7 +10,8 @@ export type SeriesFormat = 'bo1' | 'bo2' | 'bo3' | 'bo5'
 
 export interface Series {
   series_id: number | null
-  format: SeriesFormat
+  /** Null until the stage - and therefore the format - is known (§5.5). */
+  format: SeriesFormat | null
   score_a: number
   score_b: number
   winner_team_id: number | null
@@ -27,7 +28,7 @@ export const MAX_GAMES: Record<SeriesFormat, number> = {
 }
 
 /** Only Bo2 can be drawn. Every other format plays until someone takes the majority. */
-export function canDraw(format: SeriesFormat): boolean {
+export function canDraw(format: SeriesFormat | null): boolean {
   return format === 'bo2'
 }
 
@@ -38,7 +39,9 @@ export function seriesStatus(series: Series): SeriesStatus {
   if (played === 0) return 'scheduled'
   if (series.is_draw) return 'draw'
   if (series.winner_team_id !== null) return 'decided'
-  if (canDraw(series.format) && played >= MAX_GAMES[series.format]) return 'draw'
+  // An unknown format cannot tell a finished Bo2 from an unfinished Bo3, so it stays live
+  // rather than guessing a draw.
+  if (series.format && canDraw(series.format) && played >= MAX_GAMES[series.format]) return 'draw'
   return 'live'
 }
 
@@ -48,8 +51,8 @@ export function seriesScoreLabel(series: Series): string {
   return seriesStatus(series) === 'draw' ? `${score} (ничья)` : score
 }
 
-export function seriesFormatLabel(format: SeriesFormat): string {
-  return format.replace('bo', 'Bo')
+export function seriesFormatLabel(format: SeriesFormat | null): string {
+  return format ? format.replace('bo', 'Bo') : '—'
 }
 
 /**

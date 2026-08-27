@@ -21,6 +21,8 @@ export interface LiveMatch {
   dire_score: number
   p_radiant: number
   model_version: string
+  minute: number
+  tier: string
   series: Series
   /**
    * Valve's broadcast delay. Our numbers run ahead of what the viewer sees, so the UI has to

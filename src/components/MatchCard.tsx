@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 
 import type { LiveMatch } from '@/api/types'
 import { formatGameTime } from '@/lib/utils'
+import { TierBadge } from './TierBadge'
 import { SeriesScore } from './SeriesScore'
 import { StreamDelayNotice } from './StreamDelayNotice'
 import { WinProbabilityBar } from './WinProbabilityBar'
@@ -15,7 +16,12 @@ export function MatchCard({ match }: { match: LiveMatch }) {
       className="block rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition hover:border-neutral-700"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="truncate text-sm text-neutral-400">{match.league_name ?? 'Турнир'}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <TierBadge tier={match.tier} />
+          <span className="truncate text-sm text-neutral-400">
+            {match.league_name ?? `Лига ${match.league_id}`}
+          </span>
+        </div>
         <SeriesScore series={match.series} />
       </div>
 
