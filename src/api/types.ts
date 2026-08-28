@@ -98,12 +98,36 @@ export interface MatchDetail {
   timeline: TimelineEvent[]
 }
 
+export interface MinuteBucketMetrics {
+  bucket: string
+  count: number
+  log_loss: number
+  brier: number
+  accuracy: number
+}
+
+export interface ReliabilityBin {
+  predicted: number
+  observed: number
+  count: number
+}
+
+export interface ModelVersionInfo {
+  version: string
+  sample_size: number
+}
+
 export interface ModelMetrics {
   model_version: string
-  log_loss_by_minute: Record<string, number>
-  brier_by_minute: Record<string, number>
-  ece: number
   sample_size: number
+  matches: number
+  /** Null rather than zero when nothing has been scored: zero log loss is a perfect model. */
+  log_loss: number | null
+  brier: number | null
+  ece: number | null
+  by_minute: MinuteBucketMetrics[]
+  reliability: ReliabilityBin[]
+  versions: ModelVersionInfo[]
 }
 
 export interface TournamentStageInfo {
