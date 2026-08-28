@@ -3,6 +3,8 @@ import { createRoute } from '@tanstack/react-router'
 
 import { tournamentDetailQuery } from '@/api/queries'
 import type { TournamentStageInfo } from '@/api/types'
+import { ParticipantTable } from '@/components/ParticipantTable'
+import { SeriesResults } from '@/components/SeriesResults'
 import { TierBadge } from '@/components/TierBadge'
 import { seriesFormatLabel } from '@/lib/series'
 import { formatDateRange, formatPrizePool } from '@/lib/utils'
@@ -122,6 +124,17 @@ function TournamentPage() {
           )}
         </section>
       )}
+      <ParticipantTable participants={data.participants} />
+
+      <section className="space-y-2">
+        <h2 className="text-sm text-neutral-400">
+          Результаты <span className="text-neutral-600">· {data.results.length} серий</span>
+        </h2>
+        {/* A list, not a bracket. Our series carry no round and no progression, and Dota
+            playoffs are double elimination - a bracket drawn from dates alone would be a
+            guess shown as a fact. */}
+        <SeriesResults results={data.results} stages={data.stages} />
+      </section>
     </article>
   )
 }
