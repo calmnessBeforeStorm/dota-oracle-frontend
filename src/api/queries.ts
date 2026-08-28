@@ -24,10 +24,13 @@ export const matchDetailQuery = (matchId: number) =>
     queryFn: () => apiGet<MatchDetail>(`/matches/${matchId}`),
   })
 
-export const modelMetricsQuery = () =>
+export const modelMetricsQuery = (version?: string) =>
   queryOptions({
-    queryKey: ['model', 'metrics'],
-    queryFn: () => apiGet<ModelMetrics>('/model/metrics'),
+    queryKey: ['model', 'metrics', version ?? 'served'],
+    queryFn: () =>
+      apiGet<ModelMetrics>(
+        version ? `/model/metrics?version=${encodeURIComponent(version)}` : '/model/metrics',
+      ),
     staleTime: 5 * 60_000,
   })
 
