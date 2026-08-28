@@ -111,7 +111,10 @@ npm run typecheck    # tsc --noEmit
 npm run build        # tsc -b && vite build
 ```
 
-Для полноценной работы должен быть поднят бэкенд: `docker compose up` в `dota-oracle-backend`.
+Для полноценной работы нужен бэкенд, и он запускается **не** в докере: в
+`dota-oracle-backend` поднимаются хранилища (`docker compose up -d`), а API стартует руками
+из venv на Python 3.12 (`.venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8100`).
+Подробности — в `../dota-oracle-backend/CLAUDE.md`.
 
 ## Правила ведения репозитория
 
