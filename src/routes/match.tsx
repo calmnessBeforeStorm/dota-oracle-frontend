@@ -10,6 +10,7 @@ import { EventTimeline } from '@/components/EventTimeline'
 import { ProbabilityChart } from '@/components/ProbabilityChart'
 import { Roster } from '@/components/Roster'
 import { SeriesScore } from '@/components/SeriesScore'
+import { StreamDelayNotice } from '@/components/StreamDelayNotice'
 import { WinProbabilityBar } from '@/components/WinProbabilityBar'
 import { rootRoute } from './root'
 
@@ -49,6 +50,16 @@ function MatchPage() {
           {data.radiant.name ?? 'Radiant'} — {data.dire.name ?? 'Dire'}
         </h1>
         <div className="flex items-center gap-3">
+          {/* Kills on this map, kept visually apart from the series score beside it: one is
+              the game, the other is the match, and reading one as the other is the whole
+              reason section 5.5 exists. */}
+          {data.radiant_score !== null && data.dire_score !== null && (
+            <span className="font-mono text-sm">
+              <span className="text-radiant">{data.radiant_score}</span>
+              <span className="px-1 text-neutral-600">—</span>
+              <span className="text-dire">{data.dire_score}</span>
+            </span>
+          )}
           <SeriesScore series={data.series} />
           {data.is_live && (
             <span className={connected ? 'text-xs text-radiant' : 'text-xs text-neutral-500'}>
@@ -59,11 +70,14 @@ function MatchPage() {
       </header>
 
       {latest && (
-        <WinProbabilityBar
-          pRadiant={latest.p_radiant}
-          radiantName={data.radiant.name}
-          direName={data.dire.name}
-        />
+        <div className="space-y-1.5">
+          <WinProbabilityBar
+            pRadiant={latest.p_radiant}
+            radiantName={data.radiant.name}
+            direName={data.dire.name}
+          />
+          {data.is_live && <StreamDelayNotice delaySeconds={data.stream_delay_seconds} />}
+        </div>
       )}
 
       <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
@@ -71,7 +85,9 @@ function MatchPage() {
         <ProbabilityChart curve={curve} events={data.timeline} />
       </section>
 
-      <DraftStrip draft={data.draft} />
+      {/* The live scoreboard groups the draft by side; only a parsed match carries the
+          real sequence. */}
+      <DraftStrip draft={data.draft} orderIsKnown={!data.is_live} />
 
       {data.players.length > 0 && (
         <div className="grid gap-4 lg:grid-cols-2">

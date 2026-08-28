@@ -1,5 +1,11 @@
 import { cn } from '@/lib/utils'
-import { seriesFormatLabel, seriesScoreLabel, seriesStatus, type Series } from '@/lib/series'
+import {
+  seriesFormatLabel,
+  seriesIsKnown,
+  seriesScoreLabel,
+  seriesStatus,
+  type Series,
+} from '@/lib/series'
 
 /**
  * Series score. The Bo2 draw is a first-class state here (spec section 5.5): rendering 1-1
@@ -7,6 +13,8 @@ import { seriesFormatLabel, seriesScoreLabel, seriesStatus, type Series } from '
  */
 export function SeriesScore({ series, className }: { series: Series; className?: string }) {
   const status = seriesStatus(series)
+
+  if (!seriesIsKnown(series)) return null
 
   return (
     <div className={cn('flex items-center gap-2 text-sm', className)}>

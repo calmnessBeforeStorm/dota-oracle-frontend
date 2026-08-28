@@ -7,8 +7,19 @@ import { cn, heroImageUrl } from '@/lib/utils'
  * Kept as one chronological strip rather than split into two per-side lists, because the
  * order is the information: a ban answers the pick before it, and separating the sides
  * throws that away.
+ *
+ * `orderIsKnown` is the exception to that. A live match's draft comes from the scoreboard,
+ * which lists picks and bans per side and never numbers them across the draft, so the
+ * interleaving is genuinely lost until the match is parsed. The strip still shows what was
+ * taken, and the caption stops claiming a sequence we do not have.
  */
-export function DraftStrip({ draft }: { draft: DraftEntry[] }) {
+export function DraftStrip({
+  draft,
+  orderIsKnown = true,
+}: {
+  draft: DraftEntry[]
+  orderIsKnown?: boolean
+}) {
   if (draft.length === 0) return null
 
   const picks = draft.filter((entry) => entry.is_pick)
@@ -26,9 +37,9 @@ export function DraftStrip({ draft }: { draft: DraftEntry[] }) {
           return (
             <li
               key={entry.order}
-              title={`${entry.order + 1}. ${entry.is_pick ? 'пик' : 'бан'} · ${
-                entry.is_radiant ? 'Radiant' : 'Dire'
-              } · ${entry.hero_name ?? entry.hero_id}`}
+              title={`${orderIsKnown ? `${entry.order + 1}. ` : ''}${
+                entry.is_pick ? 'пик' : 'бан'
+              } · ${entry.is_radiant ? 'Radiant' : 'Dire'} · ${entry.hero_name ?? entry.hero_id}`}
               className={cn(
                 'relative overflow-hidden rounded border',
                 entry.is_radiant ? 'border-radiant-dim' : 'border-dire-dim',
@@ -59,7 +70,9 @@ export function DraftStrip({ draft }: { draft: DraftEntry[] }) {
       </ol>
 
       <p className="mt-2 text-xs text-neutral-600">
-        Слева направо — порядок драфта. Рамка — сторона, перечёркнутые — баны.
+        {orderIsKnown
+          ? 'Слева направо — порядок драфта. Рамка — сторона, перечёркнутые — баны.'
+          : 'Сгруппировано по сторонам: пока матч идёт, порядок драфта Valve не отдаёт. Рамка — сторона, перечёркнутые — баны.'}
       </p>
     </section>
   )

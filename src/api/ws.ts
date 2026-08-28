@@ -14,6 +14,23 @@ export interface LiveUpdate extends PredictionPoint {
 }
 
 /**
+ * Not every frame is a prediction.
+ *
+ * The server sends `{"type":"ping"}` whenever a match goes quiet, which is how it notices a
+ * browser that has closed the tab. Passing those to `onUpdate` put an entry with no
+ * `p_radiant` at the end of the curve, and the match card rendered `NaN%` as its headline
+ * number within five seconds of being opened - the one number the whole product is for.
+ *
+ * Checked by shape rather than by excluding `type === 'ping'`, so the next control frame
+ * cannot reintroduce this.
+ */
+function isPrediction(frame: unknown): frame is LiveUpdate {
+  if (typeof frame !== 'object' || frame === null) return false
+  const candidate = frame as Partial<LiveUpdate>
+  return typeof candidate.minute === 'number' && typeof candidate.p_radiant === 'number'
+}
+
+/**
  * Live probability stream for one match (F5).
  *
  * Reconnects with exponential backoff: broadcasts run for hours and a dropped socket must
@@ -40,7 +57,8 @@ export function subscribeToMatch(
 
     socket.onmessage = (event) => {
       try {
-        onUpdate(JSON.parse(event.data as string) as LiveUpdate)
+        const frame = JSON.parse(event.data as string) as unknown
+        if (isPrediction(frame)) onUpdate(frame)
       } catch {
         // A malformed frame is not worth tearing the connection down for.
       }
