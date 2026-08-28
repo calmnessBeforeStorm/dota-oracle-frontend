@@ -8,12 +8,27 @@ import { cn } from '@/lib/utils'
  * happens to be empty would teach the reader that a Dota series always has a winner, and
  * then a Bo2 group stage would look like a rendering bug (spec section 5.5).
  */
-export function ParticipantTable({ participants }: { participants: TournamentParticipant[] }) {
+export function ParticipantTable({
+  participants,
+  isMapped = true,
+  hasStages = true,
+}: {
+  participants: TournamentParticipant[]
+  /** Whether the league is matched to a Liquipedia page at all. */
+  isMapped?: boolean
+  /** Whether that page yielded any stages to read a series format from. */
+  hasStages?: boolean
+}) {
   if (participants.length === 0) return null
 
-  // Series outcomes come from `link-stages`, which only runs for leagues mapped to
-  // Liquipedia. Where it has not run, every record is 0-0-0 - true, but it reads as "nobody
-  // played" unless the page says why.
+  // Series outcomes come from `link-stages`, and it needs a stage with a format. Where it
+  // has not run, every record is 0-0-0 - true, but it reads as "nobody played" unless the
+  // page says why.
+  //
+  // Why, specifically. This note used to blame an unmapped league in every case, and was
+  // caught telling that to The International 2026 - a mapped Tier 1 tournament whose page
+  // simply could not be read. A wrong explanation is worse than none: it sends whoever
+  // reads it to fix something that is not broken.
   const noOutcomesKnown = participants.every(
     (p) => p.series_won + p.series_lost + p.series_drawn === 0,
   )
@@ -60,8 +75,12 @@ export function ParticipantTable({ participants }: { participants: TournamentPar
 
       {noOutcomesKnown && (
         <p className="border-t border-neutral-800 px-4 py-2 text-xs text-neutral-500">
-          Исходы серий этого турнира неизвестны — он ещё не сопоставлен с Liquipedia, поэтому
-          формат серий не определён. Счёт по картам считается в любом случае.
+          Исходы серий этого турнира неизвестны: {!isMapped
+            ? 'он ещё не сопоставлен с Liquipedia'
+            : !hasStages
+              ? 'страница турнира на Liquipedia сопоставлена, но её раздел с форматом пока не разобран'
+              : 'серии не удалось привязать к стадиям по датам'}
+          , поэтому формат серий не определён. Счёт по картам считается в любом случае.
         </p>
       )}
     </section>

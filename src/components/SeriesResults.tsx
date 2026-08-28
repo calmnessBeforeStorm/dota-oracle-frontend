@@ -15,13 +15,18 @@ import { cn, formatDateRange } from '@/lib/utils'
 /**
  * The status column says something only when there is something to say.
  *
- * A decided series needs no word: the winner is already the brighter of the two names.
+ * A recorded win needs no word: the winner is already the brighter of the two names.
+ *
+ * An **inferred** win is marked, because it is a different kind of claim. The format tells
+ * you a series has finished - two won maps end a Bo3, not a Bo5 - so it cannot be read off
+ * the score while anybody is still playing. But once nothing has been played for half a day,
+ * the maps that exist are all the maps there were, and the side that won more of them won.
+ * That reading covers 11600 of our 13588 series against 1577 with a recorded winner, which
+ * is too much to throw away and too soft to present as the same thing.
  *
  * The third state is **unknown**, and calling it "in progress" would be a lie about games
- * finished months ago. `winner_team_id` is filled by `link-stages`, which only runs for
- * leagues mapped to Liquipedia, so most series carry no outcome. It cannot be inferred from
- * the score either: without the format, 1:0 is equally a completed Bo1 and an abandoned Bo3
- * (spec section 5.5).
+ * finished months ago. A level score stays here on purpose: 1-1 is a drawn Bo2 or an
+ * abandoned Bo3, and only the format separates those (spec section 5.5).
  */
 function outcome(result: SeriesResult): { label: string; title: string; tone: string } {
   if (result.is_draw) {
@@ -31,8 +36,16 @@ function outcome(result: SeriesResult): { label: string; title: string; tone: st
     return {
       label: '—',
       title:
-        'Исход серии неизвестен: формат не определён, поэтому счёт не говорит, закончена ли она',
+        'Исход серии неизвестен: счёт по картам равный, а без формата 1–1 — это и ничья в Bo2, и брошенная Bo3',
       tone: 'text-neutral-700',
+    }
+  }
+  if (result.outcome_source === 'maps') {
+    return {
+      label: 'по картам',
+      title:
+        'Исход выведен из счёта по картам: серия не продолжалась более 12 часов, значит закончена. Формат из Liquipedia не определён',
+      tone: 'text-neutral-600',
     }
   }
   return { label: '', title: '', tone: '' }

@@ -170,6 +170,8 @@ export interface SeriesResult {
   score_b: number
   /** Null both while a series is unfinished and when it ended 1-1; `is_draw` separates them. */
   winner_team_id: number | null
+  /** 'recorded' from Liquipedia's stages, 'maps' inferred from a settled map score, null unknown. */
+  outcome_source: 'recorded' | 'maps' | null
   is_draw: boolean
   played_at: string | null
   maps: number
