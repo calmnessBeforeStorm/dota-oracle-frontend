@@ -39,6 +39,8 @@ src/
 │   ├── StreamDelayNotice.tsx   §7.4, обязателен рядом с live-числами
 │   └── Attribution.tsx         CC-BY-SA + дисклеймер Valve (§13)
 ├── routes/               root, live (F1), match (F2+F5), tournaments (F3), accuracy (F6)
+│                         F3 фильтрует по статусу и тиру; по региону нельзя —
+│                         `leagues.region` пуст у всех лиг, фильтровать нечем
 └── lib/
     ├── series.ts         форматы серий, ничьи, лейблы счёта
     ├── timeline.ts       лейблы событий, чья это польза, маркеры для графика

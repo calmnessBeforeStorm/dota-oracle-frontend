@@ -17,6 +17,49 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]['key']
 
+/**
+ * Tier is the filter that matters: the product is about Tier 1, and 135 of our 151 leagues
+ * are unmapped, so without this the calendar buries the ten tournaments it exists for.
+ *
+ * "Без разметки" is its own choice rather than being folded into "все": an unmapped
+ * tournament is not a low-tier one, it is one nobody has classified yet (§3), and that
+ * distinction is what phase 2 is about.
+ */
+const TIERS = [
+  { key: undefined, label: 'Любой тир' },
+  { key: 'tier1', label: 'Tier 1' },
+  { key: 'tier2', label: 'Tier 2' },
+  { key: 'tier3', label: 'Tier 3' },
+  { key: 'unknown', label: 'Без разметки' },
+] as const
+
+type TierKey = (typeof TIERS)[number]['key']
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'rounded px-3 py-1.5 text-sm transition',
+        active
+          ? 'bg-neutral-100 text-neutral-900'
+          : 'bg-neutral-900 text-neutral-400 hover:text-neutral-100',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 function TournamentRow({ tournament }: { tournament: TournamentSummary }) {
   return (
     <Link
@@ -44,25 +87,28 @@ function TournamentRow({ tournament }: { tournament: TournamentSummary }) {
 /** F3: Liquipedia-style tournament calendar. */
 function TournamentsPage() {
   const [status, setStatus] = useState<Tab>('all')
-  const { data, isLoading, isError } = useQuery(tournamentsQuery(status))
+  const [tier, setTier] = useState<TierKey>(undefined)
+  const { data, isLoading, isError } = useQuery(tournamentsQuery(status, tier))
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setStatus(tab.key)}
-            className={cn(
-              'rounded px-3 py-1.5 text-sm transition',
-              status === tab.key
-                ? 'bg-neutral-100 text-neutral-900'
-                : 'bg-neutral-900 text-neutral-400 hover:text-neutral-100',
-            )}
-          >
+          <FilterChip key={tab.key} active={status === tab.key} onClick={() => setStatus(tab.key)}>
             {tab.label}
-          </button>
+          </FilterChip>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {TIERS.map((option) => (
+          <FilterChip
+            key={option.key ?? 'any'}
+            active={tier === option.key}
+            onClick={() => setTier(option.key)}
+          >
+            {option.label}
+          </FilterChip>
         ))}
       </div>
 
@@ -71,7 +117,7 @@ function TournamentsPage() {
 
       {data && data.length === 0 && (
         <p className="rounded-lg border border-dashed border-neutral-800 py-16 text-center text-neutral-500">
-          В этой категории турниров нет
+          Под эти фильтры турниров нет
         </p>
       )}
 

@@ -31,10 +31,15 @@ export const modelMetricsQuery = () =>
     staleTime: 5 * 60_000,
   })
 
-export const tournamentsQuery = (status: 'current' | 'upcoming' | 'past' | 'all') =>
+export const tournamentsQuery = (
+  status: 'current' | 'upcoming' | 'past' | 'all',
+  tier?: string,
+) =>
   queryOptions({
-    queryKey: ['tournaments', status],
-    queryFn: () => apiGet<TournamentSummary[]>('/tournaments', { status }),
+    queryKey: ['tournaments', status, tier ?? 'any'],
+    // `tier` is omitted rather than sent empty: the endpoint treats any value as a filter,
+    // and "" would match nothing instead of everything.
+    queryFn: () => apiGet<TournamentSummary[]>('/tournaments', tier ? { status, tier } : { status }),
     staleTime: 10 * 60_000,
   })
 
