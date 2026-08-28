@@ -124,7 +124,11 @@ function TournamentPage() {
           )}
         </section>
       )}
-      <ParticipantTable participants={data.participants} />
+      <ParticipantTable
+        participants={data.participants}
+        isMapped={data.liquipedia_slug !== null}
+        hasStages={data.stages.length > 0}
+      />
 
       <section className="space-y-2">
         <h2 className="text-sm text-neutral-400">
