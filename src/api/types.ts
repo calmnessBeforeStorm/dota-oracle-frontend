@@ -131,10 +131,43 @@ export interface TournamentSummary {
   status: 'current' | 'upcoming' | 'past'
 }
 
+export interface SeriesResult {
+  series_id: number
+  stage_id: number | null
+  format: SeriesFormat | null
+  team_a: TeamBrief
+  team_b: TeamBrief
+  score_a: number
+  score_b: number
+  /** Null both while a series is unfinished and when it ended 1-1; `is_draw` separates them. */
+  winner_team_id: number | null
+  is_draw: boolean
+  played_at: string | null
+  maps: number
+  /** The maps themselves, in play order, so a row can link into a match card. */
+  match_ids: number[]
+}
+
+export interface TournamentParticipant {
+  team: TeamBrief
+  series_won: number
+  series_lost: number
+  series_drawn: number
+  maps_won: number
+  maps_lost: number
+}
+
 export interface TournamentDetail extends Omit<TournamentSummary, 'stages'> {
   stages: TournamentStageInfo[]
   series_total: number
   series_drawn: number
   /** Series whose stage could not be determined, so the format is still unknown. */
   series_without_format: number
+  participants: TournamentParticipant[]
+  /**
+   * Every series of the tournament, oldest first. Not a bracket: the backend has no round
+   * and no progression, and Dota playoffs are double elimination, so one cannot be drawn
+   * from this without inventing it.
+   */
+  results: SeriesResult[]
 }
