@@ -19,3 +19,6 @@ pnpm-debug.log*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# tsc incremental cache: a build artifact, and it changes on every typecheck
+tsconfig.tsbuildinfo
