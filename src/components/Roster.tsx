@@ -17,6 +17,11 @@ export function Roster({
 }) {
   const sorted = [...players].sort((a, b) => (b.net_worth ?? 0) - (a.net_worth ?? 0))
 
+  // `/proPlayers` only lists players with a pro profile, so a Tier-2 roster can come back
+  // entirely nameless. Ten dashes in a column is noise, not information - the line is shown
+  // only when somebody on this side has a name, which also keeps the rows the same height.
+  const anyNamed = sorted.some((p) => p.player_name)
+
   if (sorted.length === 0) return null
 
   return (
@@ -60,9 +65,11 @@ export function Roster({
                         {player.hero_name ?? `#${player.hero_id ?? '?'}`}
                       </span>
                       {/* Null rather than the account id: a number reads as a name and is not one. */}
-                      <span className="block truncate text-xs leading-tight text-neutral-500">
-                        {player.player_name ?? '—'}
-                      </span>
+                      {anyNamed && (
+                        <span className="block truncate text-xs leading-tight text-neutral-500">
+                          {player.player_name ?? '—'}
+                        </span>
+                      )}
                     </span>
                   </div>
                 </td>

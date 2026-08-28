@@ -92,6 +92,11 @@ export interface MatchDetail {
   series: Series
   is_live: boolean
   radiant_win: boolean | null
+  /** Kills on this map. The series score lives on `series`. */
+  radiant_score: number | null
+  dire_score: number | null
+  /** Seconds the broadcast trails our data by (spec section 7.4). */
+  stream_delay_seconds: number
   curve: PredictionPoint[]
   players: MatchPlayerBrief[]
   draft: DraftEntry[]

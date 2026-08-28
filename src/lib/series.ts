@@ -45,6 +45,18 @@ export function seriesStatus(series: Series): SeriesStatus {
   return 'live'
 }
 
+/**
+ * Whether we know anything about the series at all.
+ *
+ * A live map carries no series id and no format until Liquipedia has been matched, so a
+ * standalone game and game one of a Bo3 are indistinguishable - both arrive as 0:0 with a
+ * null format. Rendering "0 : 0" for them invents a series, and next to the map's kill
+ * score it reads as a second, contradictory score. Nothing known, nothing shown.
+ */
+export function seriesIsKnown(series: Series): boolean {
+  return series.series_id !== null || series.format !== null || series.score_a + series.score_b > 0
+}
+
 /** Score label for the header, e.g. "1 : 1 (ничья)" for a drawn Bo2. */
 export function seriesScoreLabel(series: Series): string {
   const score = `${series.score_a} : ${series.score_b}`
