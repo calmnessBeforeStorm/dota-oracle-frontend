@@ -7,12 +7,17 @@ const empty: ModelMetrics = {
   model_version: 'live-v2',
   sample_size: 0,
   matches: 0,
+  predicted_matches: 0,
+  awaiting_outcome: 0,
+  first_prediction_at: null,
+  last_prediction_at: null,
   log_loss: null,
   brier: null,
   ece: null,
   by_minute: [],
   reliability: [],
   versions: [],
+  training: null,
 }
 
 describe('formatMetric', () => {
