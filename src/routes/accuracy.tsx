@@ -5,7 +5,8 @@ import { useState } from 'react'
 import { modelMetricsQuery } from '@/api/queries'
 import type { ModelMetrics } from '@/api/types'
 import { CalibrationChart } from '@/components/CalibrationChart'
-import { formatMetric, isSmallSample, versionChoices } from '@/lib/metrics'
+import { TrainingStatus } from '@/components/TrainingStatus'
+import { formatMetric, isSmallSample, matchesLabel, versionChoices } from '@/lib/metrics'
 import { cn } from '@/lib/utils'
 import { rootRoute } from './root'
 
@@ -96,19 +97,24 @@ function AccuracyPage() {
       <div className="grid gap-3 sm:grid-cols-4">
         <Metric label="Версия модели" value={data.model_version} />
         <Metric
-          label="Выборка"
-          value={`${data.sample_size}`}
-          hint={`${data.matches} ${data.matches === 1 ? 'матч' : 'матчей'}`}
+          label="Сверено"
+          value={matchesLabel(data.matches)}
+          hint={`${data.sample_size} прогнозов`}
         />
         <Metric label="Log loss" value={formatMetric(data.log_loss)} hint="0.693 — монетка" />
         <Metric label="ECE" value={formatMetric(data.ece, 3)} hint="разрыв обещания и факта" />
       </div>
 
+      <TrainingStatus data={data} />
+
       {isSmallSample(data) && (
         <p className="rounded-lg border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200/80">
-          Матчей пока мало ({data.matches}), и цифрам ниже верить рано. Прогнозов много только
-          потому, что каждый матч даёт их несколько десятков, — но все они об одной и той же
-          игре, так что считать их независимыми измерениями нельзя.
+          Сверенных матчей пока мало ({data.matches}), и цифрам ниже верить рано. Прогнозов много
+          только потому, что каждый матч даёт их несколько десятков, — но все они об одной и той
+          же игре, так что считать их независимыми измерениями нельзя.
+          {data.training
+            ? ` Это не значит, что модель не проверена: на отложенной выборке её оценили на ${data.training.holdout_matches} матчах — блок «На чём обучена» выше.`
+            : ''}
         </p>
       )}
 

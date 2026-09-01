@@ -122,10 +122,48 @@ export interface ModelVersionInfo {
   sample_size: number
 }
 
+/**
+ * What the served model was fitted and validated on - its model card, in public form.
+ *
+ * A different measurement from everything else on this page, and the page must never let the
+ * two read as one number. These come from a held-out slice of parsed replays: many matches,
+ * scored once, offline. The others come from predictions actually served to visitors, and
+ * there are only ever as many of those as there were matches on air while the version ran.
+ *
+ * Null for a baseline, which has no card: a baseline is code, not something anybody fitted
+ * and held a slice back from.
+ */
+export interface ModelTraining {
+  trained_at: string
+  train_matches: number
+  train_rows: number
+  /** First and last day of the slice. */
+  train_window: string[]
+  holdout_matches: number
+  holdout_rows: number
+  holdout_window: string[]
+  holdout_log_loss: number
+  holdout_brier: number
+  holdout_ece: number
+  passes_gate: boolean
+  gate_failures: string[]
+  /** Comparisons the holdout could not decide. A pass on ties is not a pass on wins. */
+  gate_ties: string[]
+  calibrator: string
+  weighted: boolean
+  feature_count: number
+}
+
 export interface ModelMetrics {
   model_version: string
   sample_size: number
+  /** Matches whose outcome is known - what the numbers below are computed from. */
   matches: number
+  /** Every match this version predicted, scored or not. */
+  predicted_matches: number
+  awaiting_outcome: number
+  first_prediction_at: string | null
+  last_prediction_at: string | null
   /** Null rather than zero when nothing has been scored: zero log loss is a perfect model. */
   log_loss: number | null
   brier: number | null
@@ -133,6 +171,7 @@ export interface ModelMetrics {
   by_minute: MinuteBucketMetrics[]
   reliability: ReliabilityBin[]
   versions: ModelVersionInfo[]
+  training: ModelTraining | null
 }
 
 export interface TournamentStageInfo {
