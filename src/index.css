@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-base text-ink antialiased;
+    @apply bg-ground text-ink antialiased;
     font-family: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   }
 }
