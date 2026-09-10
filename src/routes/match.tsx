@@ -10,8 +10,8 @@ import { EventTimeline } from '@/components/EventTimeline'
 import { ProbabilityChart } from '@/components/ProbabilityChart'
 import { Roster } from '@/components/Roster'
 import { SeriesScore } from '@/components/SeriesScore'
-import { StreamDelayNotice } from '@/components/StreamDelayNotice'
-import { WinProbabilityBar } from '@/components/WinProbabilityBar'
+import { Failed, Loading } from '@/ui/Pending'
+import { ProbabilityDisplay } from '@/ui/ProbabilityDisplay'
 import { rootRoute } from './root'
 
 /** F2 + F5: match card with a live-updating probability curve. */
@@ -37,11 +37,14 @@ function MatchPage() {
     )
   }, [id, data?.is_live])
 
-  if (isLoading) return <p className="text-neutral-500">Загрузка…</p>
-  if (isError || !data) return <p className="text-dire">Матч не найден</p>
+  if (isLoading) return <Loading />
+  if (isError || !data) return <Failed message="Матч не найден" />
 
   const curve = [...data.curve, ...liveCurve.filter((p) => !data.curve.some((c) => c.minute === p.minute))]
   const latest = curve.at(-1)
+  // Предыдущая точка нужна только ради дельты: на втором экране смотрят на то, куда
+  // число двинулось, а не на само число.
+  const previous = curve.at(-2)
 
   return (
     <article className="space-y-6">
@@ -70,14 +73,14 @@ function MatchPage() {
       </header>
 
       {latest && (
-        <div className="space-y-1.5">
-          <WinProbabilityBar
-            pRadiant={latest.p_radiant}
-            radiantName={data.radiant.name}
-            direName={data.dire.name}
-          />
-          {data.is_live && <StreamDelayNotice delaySeconds={data.stream_delay_seconds} />}
-        </div>
+        <ProbabilityDisplay
+          pRadiant={latest.p_radiant}
+          radiantName={data.radiant.name}
+          direName={data.dire.name}
+          variant="broadcast"
+          delta={previous ? latest.p_radiant - previous.p_radiant : null}
+          live={data.is_live ? { streamDelaySeconds: data.stream_delay_seconds } : undefined}
+        />
       )}
 
       <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">

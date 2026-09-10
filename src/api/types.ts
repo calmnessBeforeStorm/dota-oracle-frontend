@@ -31,6 +31,30 @@ export interface LiveMatch {
   stream_delay_s: number
 }
 
+/**
+ * Сыгранный матч в ленте главной страницы.
+ *
+ * Популяция — то, что видела live-петля, а не весь архив: сюда попадает только матч, по
+ * которому мы успели дать прогноз.
+ */
+export interface RecentMatch {
+  match_id: number
+  league_id: number | null
+  league_name: string | null
+  tier: string
+  radiant: TeamBrief
+  dire: TeamBrief
+  radiant_win: boolean
+  /** Абсолютное время. «Вчера» врёт, когда воркер простоял трое суток. */
+  started_at: string | null
+  series: Series
+  curve: PredictionPoint[]
+  /** Вероятность за Radiant на 10-й минуте. null рисуется прочерком, не соседней минутой. */
+  p_at_ten: number | null
+  /** Версия, выдавшая точку 10-й минуты. Пустая строка, когда этой минуты нет. */
+  model_version: string
+}
+
 export interface PredictionPoint {
   minute: number
   p_radiant: number

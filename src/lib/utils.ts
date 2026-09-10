@@ -1,5 +1,21 @@
 import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { extendTailwindMerge } from 'tailwind-merge'
+
+/**
+ * tailwind-merge has to be told about the theme's own font sizes.
+ *
+ * Out of the box it knows Tailwind's stock scale, so `text-micro` looks to it like a
+ * colour - and `cn('text-micro', 'text-radiant')` dropped the size and kept the colour.
+ * The failure is silent and looks like a styling mistake: the delta beside the win
+ * probability rendered at 88px, the size of the headline number it annotates.
+ */
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      'font-size': [{ text: ['hero', 'lead', 'body', 'micro'] }],
+    },
+  },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

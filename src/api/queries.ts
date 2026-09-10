@@ -5,6 +5,7 @@ import type {
   LiveMatch,
   MatchDetail,
   ModelMetrics,
+  RecentMatch,
   TournamentDetail,
   TournamentSummary,
 } from './types'
@@ -16,6 +17,15 @@ export const liveMatchesQuery = () =>
     // Polling is the floor, not the mechanism: live cards are pushed over WebSocket (F5).
     // This only covers reconnects and matches appearing or ending.
     refetchInterval: 30_000,
+  })
+
+export const recentMatchesQuery = (limit = 20) =>
+  queryOptions({
+    queryKey: ['matches', 'recent', limit],
+    queryFn: () => apiGet<RecentMatch[]>('/matches/recent', { limit: String(limit) }),
+    // Лента сыгранных меняется, только когда матч закончился и исход приехал из внешнего
+    // источника, — это минуты, а не секунды.
+    staleTime: 5 * 60_000,
   })
 
 export const matchDetailQuery = (matchId: number) =>

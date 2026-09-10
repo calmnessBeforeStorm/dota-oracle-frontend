@@ -9,7 +9,7 @@ export function StreamDelayNotice({ delaySeconds }: { delaySeconds: number }) {
   if (delaySeconds <= 0) return null
 
   return (
-    <p className="text-xs text-amber-500/80">
+    <p className="text-micro text-ink-faint">
       Данные опережают трансляцию примерно на {formatGameTime(delaySeconds)}
     </p>
   )

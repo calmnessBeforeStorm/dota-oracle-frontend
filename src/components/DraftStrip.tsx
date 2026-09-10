@@ -42,7 +42,7 @@ export function DraftStrip({
               } · ${entry.is_radiant ? 'Radiant' : 'Dire'} · ${entry.hero_name ?? entry.hero_id}`}
               className={cn(
                 'relative overflow-hidden rounded border',
-                entry.is_radiant ? 'border-radiant-dim' : 'border-dire-dim',
+                entry.is_radiant ? 'border-radiant' : 'border-dire',
                 // A ban is a hero taken off the board. Dimmed rather than hidden, and kept
                 // legible: at full grayscale on a dark portrait the mark disappeared and the
                 // strip read as twenty-four picks.

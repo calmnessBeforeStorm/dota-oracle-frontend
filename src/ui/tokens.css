@@ -1,0 +1,25 @@
+@font-face {
+  font-family: 'Figure';
+  src: url('./fonts/Archivo-Variable.woff2') format('woff2-variations');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Подложки: разделяем светом, а не рамками. */
+  --base: #08090b;
+  --raised: #101216;
+  --line: #1c1f25;
+
+  /* Текст: одна холодная серая шкала, три ступени. */
+  --ink: #f4f5f7;
+  --ink-dim: #9aa0a8;
+  --ink-faint: #6b7178;
+
+  /* Единственный насыщенный цвет в системе — сторона. */
+  --radiant: #35c46a;
+  --dire: #e0483a;
+}
