@@ -80,6 +80,16 @@ describe('TrainingStatus', () => {
     expect(screen.getByText('20-24: worse')).toBeInTheDocument()
   })
 
+  it('does not paint a failed gate in the colour of a side', () => {
+    // Красный в этой системе принадлежит Dire. Провал гейта — утверждение о модели, а не о
+    // стороне, и покрашенный в цвет стороны он читается как утверждение о матче. Выделяем
+    // яркостью и насыщенностью шрифта, как это уже сделано в Pending.Failed.
+    const failed = { ...training, passes_gate: false, gate_failures: ['20-24: worse'] }
+    render(<TrainingStatus data={metrics({ training: failed })} />)
+
+    expect(screen.getByText(/Гейт не пройден/).className).not.toMatch(/red|text-dire/)
+  })
+
   it('does not invent a holdout for a baseline', () => {
     /* A baseline has no card. Rendering zeroes would read as a model that failed validation. */
     render(<TrainingStatus data={metrics({ training: null })} />)

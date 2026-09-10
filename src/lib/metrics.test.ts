@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ModelMetrics } from '@/api/types'
-import { formatMetric, isSmallSample, versionChoices } from './metrics'
+import { formatMetric, isSmallSample, tournamentsLabel, versionChoices } from './metrics'
 
 const empty: ModelMetrics = {
   model_version: 'live-v2',
@@ -80,5 +80,20 @@ describe('isSmallSample', () => {
 
   it('stops warning once there is enough to read', () => {
     expect(isSmallSample({ ...empty, matches: 400, sample_size: 12000 })).toBe(false)
+  })
+})
+
+describe('tournamentsLabel', () => {
+  // Найдено просмотром страницы, а не тестом: календарь печатал «421 турниров».
+  // Помощник для склонения на этой же странице уже был, счётчик турниров его не звал.
+  it('agrees with the number', () => {
+    expect(tournamentsLabel(421)).toBe('421 турнир')
+    expect(tournamentsLabel(2)).toBe('2 турнира')
+    expect(tournamentsLabel(5)).toBe('5 турниров')
+  })
+
+  it('handles the teens, where the last digit lies', () => {
+    expect(tournamentsLabel(11)).toBe('11 турниров')
+    expect(tournamentsLabel(112)).toBe('112 турниров')
   })
 })

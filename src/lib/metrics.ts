@@ -54,6 +54,10 @@ export function matchesLabel(n: number): string {
   return `${n} ${plural(n, 'матч', 'матча', 'матчей')}`
 }
 
+export function tournamentsLabel(n: number): string {
+  return `${n} ${plural(n, 'турнир', 'турнира', 'турниров')}`
+}
+
 export function comparisonsLabel(n: number): string {
   return `${n} ${plural(n, 'сравнение', 'сравнения', 'сравнений')}`
 }
