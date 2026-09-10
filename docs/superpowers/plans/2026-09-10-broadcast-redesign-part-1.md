@@ -1157,22 +1157,30 @@ git commit -m "assemble the feed of matches we predicted and then saw finish"
 ```python
 # tests/test_recent.py — дописать в конец
 class TestRoute:
-    def test_serves_an_empty_feed(self, client: TestClient) -> None:
-        response = client.get("/api/matches/recent")
-        assert response.status_code == 200
-        assert response.json() == []
+    def test_route_is_registered(self, client: TestClient) -> None:
+        paths = client.get("/openapi.json").json()["paths"]
+        assert "/api/matches/recent" in paths
+
+    def test_recent_is_matched_before_the_id_route(self, client: TestClient) -> None:
+        # Иначе `recent` уедет в `/{match_id}` как идентификатор матча. Проверяется
+        # порядком в таблице маршрутов, а не запросом: запрос ушёл бы в живую базу.
+        paths = [getattr(route, "path", "") for route in client.app.routes]
+        assert paths.index("/api/matches/recent") < paths.index("/api/matches/{match_id}")
 
     def test_refuses_an_unreasonable_limit(self, client: TestClient) -> None:
         # Лента на главной; полсотни карточек — потолок, дальше это выгрузка архива.
+        # Валидация отвергает запрос до того, как дело дойдёт до сессии.
         assert client.get("/api/matches/recent", params={"limit": 500}).status_code == 422
 ```
 
 Дописать импорт в шапку файла: `from fastapi.testclient import TestClient`.
 
+**Почему маршрут не проверяется живым запросом.** Фикстура `client` поднимает приложение с боевыми настройками, а не с тестовой схемой: `sessionmaker` подменяет `search_path` только для тестов, которые берут его сами. Запрос `GET /api/matches/recent` через `client` ушёл бы в **настоящую базу** — и `assert response.json() == []` либо упал бы на реальных данных, либо (что хуже) прошёл бы на пустой машине и молча деградировал потом. Такое уже случалось в этом проекте с `run_normalize`. Поэтому регистрация и порядок маршрутов проверяются структурно, а поведение с данными — тестами сервиса, у которых схема своя.
+
 - [ ] **Step 2: Прогнать тест и убедиться, что он падает**
 
 Run: `docker compose run --rm tools python -m pytest tests/test_recent.py::TestRoute -v`
-Expected: FAIL — 404 вместо 200.
+Expected: FAIL — `/api/matches/recent` не найден ни в openapi, ни в таблице маршрутов.
 
 - [ ] **Step 3: Добавить маршрут**
 
@@ -1209,7 +1217,7 @@ from app.schemas.common import (
 - [ ] **Step 4: Прогнать тесты**
 
 Run: `docker compose run --rm tools python -m pytest tests/test_recent.py -v`
-Expected: PASS, 13 тестов.
+Expected: PASS, 14 тестов.
 
 - [ ] **Step 5: Прогнать всё перед пушем**
 
