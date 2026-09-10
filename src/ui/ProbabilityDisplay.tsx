@@ -16,17 +16,19 @@ interface Props {
 }
 
 /** Две плотности — это две строки таблицы, а не две ветки разметки. */
-const SIZES: Record<Variant, { figure: string; bar: string; label: string }> = {
-  broadcast: { figure: 'text-hero', bar: 'h-3', label: 'text-lead' },
-  compact: { figure: 'text-lead', bar: 'h-2', label: 'text-body' },
-  inline: { figure: 'text-body', bar: 'h-1.5', label: 'text-micro' },
+const SIZES: Record<Variant, { figure: string; bar: string; label: string; delta: string }> = {
+  // Дельта на ступень ниже числа, а не в самом низу шкалы: на втором экране смотрят
+  // именно на неё, и 12px рядом с 88px теряются.
+  broadcast: { figure: 'text-hero', bar: 'h-3', label: 'text-lead', delta: 'text-lead' },
+  compact: { figure: 'text-lead', bar: 'h-2', label: 'text-body', delta: 'text-micro' },
+  inline: { figure: 'text-body', bar: 'h-1.5', label: 'text-micro', delta: 'text-micro' },
 }
 
-function Delta({ delta }: { delta: number }) {
+function Delta({ delta, size }: { delta: number; size: string }) {
   const points = Math.abs(delta) * 100
   if (points < 0.05) return null
   return (
-    <span className={cn('text-micro', delta > 0 ? 'text-radiant' : 'text-dire')}>
+    <span className={cn(size, delta > 0 ? 'text-radiant' : 'text-dire')}>
       {delta > 0 ? '▲' : '▼'} {points.toFixed(1)}
     </span>
   )
@@ -58,10 +60,16 @@ export function ProbabilityDisplay({
         <TeamName name={direName} side="dire" />
       </div>
 
-      <div className={cn('flex items-baseline justify-between gap-3 font-mono', size.figure)}>
+      {/* Табличные цифры обязательны: без них меняющаяся вероятность дёргает соседей. */}
+      <div
+        className={cn(
+          'flex items-baseline justify-between gap-3 font-figure tabular-nums',
+          size.figure,
+        )}
+      >
         <span className="flex items-baseline gap-2">
           {formatPercent(pRadiant, 1)}
-          {delta !== null && <Delta delta={delta} />}
+          {delta !== null && <Delta delta={delta} size={size.delta} />}
         </span>
         <span className="text-ink-dim">{formatPercent(1 - pRadiant, 1)}</span>
       </div>

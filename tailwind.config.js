@@ -17,6 +17,12 @@ export default {
         radiant: 'var(--radiant)',
         dire: 'var(--dire)',
       },
+      fontFamily: {
+        // Гарнитура цифр. Табличные цифры включаются классом `tabular-nums` на самих
+        // числах: `font-variant-numeric` — свойство текста, а не дескриптор @font-face,
+        // и внутри правила @font-face оно молча ничего не делает.
+        figure: ['Figure', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       fontSize: {
         // Провал между hero и lead — то, что делает главную цифру читаемой с дивана.
         hero: ['5.5rem', { lineHeight: '1', letterSpacing: '-0.03em' }],
