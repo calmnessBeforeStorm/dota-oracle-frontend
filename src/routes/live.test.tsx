@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -21,7 +21,10 @@ function renderHome() {
   )
 }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  localStorage.clear()
+})
 
 function stubApi(routes: Record<string, unknown>) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
@@ -83,5 +86,95 @@ describe('home page', () => {
     stubApi({ '/api/matches/live': [], '/api/matches/recent': [], '/api/model/metrics': null })
     renderHome()
     expect(await screen.findByText(/Сверенных матчей пока нет/i)).toBeInTheDocument()
+  })
+})
+
+function liveMatch(tier: string, matchId: number, leagueName: string) {
+  return {
+    match_id: matchId,
+    league_id: matchId,
+    league_name: leagueName,
+    tier,
+    radiant: { team_id: 1, name: 'Team Spirit', logo_url: null },
+    dire: { team_id: 2, name: 'Falcons', logo_url: null },
+    game_time: 600,
+    radiant_score: 5,
+    dire_score: 3,
+    p_radiant: 0.55,
+    model_version: 'lgbm-20260901-102407',
+    minute: 10,
+    stream_delay_s: 120,
+    series: {
+      series_id: null,
+      format: null,
+      score_a: 0,
+      score_b: 0,
+      winner_team_id: null,
+      is_draw: false,
+      game_in_series: 1,
+      is_conditional_game: false,
+    },
+  }
+}
+
+describe('фильтр по тиру в живой ленте', () => {
+  const feed = [
+    liveMatch('tier1', 1, 'The International 2026'),
+    liveMatch('unknown', 2, 'bottle cup'),
+    liveMatch('unknown', 3, '牛马MAJOR'),
+  ]
+
+  it('по умолчанию показывает только Tier 1', async () => {
+    stubApi({ '/api/matches/live': feed, '/api/matches/recent': [], '/api/model/metrics': null })
+    renderHome()
+
+    expect(await screen.findByText('The International 2026')).toBeInTheDocument()
+    expect(screen.queryByText('bottle cup')).not.toBeInTheDocument()
+  })
+
+  it('говорит, что таких турниров нет, вместо пустого экрана', async () => {
+    // Ровно тот случай, ради которого фильтр и сделан: Tier 1 играет несколько часов в
+    // сутки, всё остальное время лента пуста, и молчание читалось бы как поломка.
+    const noTierOne = feed.filter((m) => m.tier !== 'tier1')
+    stubApi({
+      '/api/matches/live': noTierOne,
+      '/api/matches/recent': [],
+      '/api/model/metrics': null,
+    })
+    renderHome()
+
+    expect(await screen.findByText(/Матчей Tier 1 сейчас нет/i)).toBeInTheDocument()
+    expect(screen.queryByText('bottle cup')).not.toBeInTheDocument()
+  })
+
+  it('включает неразмеченные турниры по требованию', async () => {
+    stubApi({ '/api/matches/live': feed, '/api/matches/recent': [], '/api/model/metrics': null })
+    renderHome()
+
+    fireEvent.click(await screen.findByRole('button', { name: /Без разметки/ }))
+
+    expect(await screen.findByText('bottle cup')).toBeInTheDocument()
+    expect(screen.getByText('The International 2026')).toBeInTheDocument()
+  })
+
+  it('не даёт снять все тиры разом', async () => {
+    // Пустой набор означал бы «показать ничего и никогда», что неотличимо от поломки.
+    stubApi({ '/api/matches/live': feed, '/api/matches/recent': [], '/api/model/metrics': null })
+    renderHome()
+
+    fireEvent.click(await screen.findByRole('button', { name: /Tier 1/ }))
+
+    expect(await screen.findByText('The International 2026')).toBeInTheDocument()
+  })
+
+  it('запоминает выбор между заходами', async () => {
+    stubApi({ '/api/matches/live': feed, '/api/matches/recent': [], '/api/model/metrics': null })
+    const first = renderHome()
+    fireEvent.click(await screen.findByRole('button', { name: /Без разметки/ }))
+    expect(await screen.findByText('bottle cup')).toBeInTheDocument()
+    first.unmount()
+
+    renderHome()
+    expect(await screen.findByText('bottle cup')).toBeInTheDocument()
   })
 })

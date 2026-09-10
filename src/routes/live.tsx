@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createRoute } from '@tanstack/react-router'
 
@@ -5,6 +6,15 @@ import { liveMatchesQuery, modelMetricsQuery, recentMatchesQuery } from '@/api/q
 import { MatchCard } from '@/components/MatchCard'
 import { ModelStrip } from '@/components/ModelStrip'
 import { PlayedMatchCard } from '@/components/PlayedMatchCard'
+import { TierFilter } from '@/components/TierFilter'
+import {
+  TIER_OPTIONS,
+  normaliseTier,
+  readTiers,
+  toggleTier,
+  writeTiers,
+  type Tier,
+} from '@/lib/tiers'
 import { Empty, Loading } from '@/ui/Pending'
 import { rootRoute } from './root'
 
@@ -20,26 +30,62 @@ function HomePage() {
   const live = useQuery(liveMatchesQuery())
   const recent = useQuery(recentMatchesQuery())
   const metrics = useQuery(modelMetricsQuery())
+  const [tiers, setTiers] = useState<Tier[]>(readTiers)
 
   if (live.isLoading && recent.isLoading) return <Loading />
 
-  const liveMatches = live.data ?? []
+  const feed = live.data ?? []
   const playedMatches = recent.data ?? []
+
+  // Тир приходит из ленты — поллер кладёт его в снимок, — поэтому фильтр считается здесь,
+  // а не запросом на сервер: лента это десятки записей, и счётчики по скрытым тирам нужны
+  // сразу, иначе «ничего не идёт» и «всё отфильтровано» выглядят одинаково.
+  const counts = feed.reduce<Record<Tier, number>>(
+    (acc, match) => {
+      const tier = normaliseTier(match.tier)
+      acc[tier] += 1
+      return acc
+    },
+    { tier1: 0, tier2: 0, tier3: 0, unknown: 0 },
+  )
+  const liveMatches = feed.filter((match) => tiers.includes(normaliseTier(match.tier)))
+  const hidden = feed.length - liveMatches.length
+
+  const onToggle = (tier: Tier) => {
+    const next = toggleTier(tiers, tier)
+    setTiers(next)
+    writeTiers(next)
+  }
+
+  const selectedLabels = TIER_OPTIONS.filter((option) => tiers.includes(option.key))
+    .map((option) => option.label)
+    .join(', ')
 
   return (
     <div className="space-y-6">
       {metrics.data && <ModelStrip data={metrics.data} />}
 
-      {liveMatches.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-body text-ink-faint">Идут сейчас</h2>
+      <section className="space-y-3">
+        <h2 className="text-body text-ink-faint">Идут сейчас</h2>
+        <TierFilter selected={tiers} onToggle={onToggle} counts={counts} />
+
+        {liveMatches.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {liveMatches.map((match) => (
               <MatchCard key={match.match_id} match={match} />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <Empty
+            title={`Матчей ${selectedLabels} сейчас нет`}
+            hint={
+              hidden > 0
+                ? `Идут ${hidden} матчей в турнирах других уровней — включите их фильтром выше, если нужно`
+                : 'Валв не отдаёт ни одной идущей лиговой игры прямо сейчас'
+            }
+          />
+        )}
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-body text-ink-faint">
