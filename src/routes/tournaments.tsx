@@ -8,9 +8,23 @@ import { TierBadge } from '@/components/TierBadge'
 import { cn, formatPrizePool, formatDateRange } from '@/lib/utils'
 import { rootRoute } from './root'
 
+/**
+ * Statuses the calendar can actually answer.
+ *
+ * "Предстоящие" is deliberately absent, and permanently rather than until some backlog item
+ * lands. A tournament that has not started has no Valve `league_id`, so we learn of a league
+ * only once one of its matches has been played - the schema cannot hold a future tournament
+ * at all. The one source that knows is Liquipedia, and its tournament lists are generated
+ * from LPDB: they are absent from page wikitext and exist only inside 158 KB of rendered
+ * markup. Access to LPDB was requested and refused - Liquipedia does not grant it to
+ * projects that predict match outcomes.
+ *
+ * That leaves scraping rendered HTML, which breaks silently when the markup changes, in a
+ * product whose whole claim is measured facts. So the schedule is a link to Liquipedia
+ * instead: that is what we promise anyway - link, do not reproduce.
+ */
 const TABS = [
   { key: 'current', label: 'Текущие' },
-  { key: 'upcoming', label: 'Предстоящие' },
   { key: 'past', label: 'Прошедшие' },
   { key: 'all', label: 'Все' },
 ] as const
@@ -111,6 +125,18 @@ function TournamentsPage() {
           </FilterChip>
         ))}
       </div>
+
+      <p className="text-sm text-neutral-500">
+        Будущие турниры —{' '}
+        <a
+          href="https://liquipedia.net/dota2/Portal:Tournaments"
+          target="_blank"
+          rel="noreferrer"
+          className="underline decoration-neutral-700 underline-offset-4 hover:text-neutral-300"
+        >
+          расписание на Liquipedia
+        </a>
+      </p>
 
       {isLoading && <p className="text-neutral-500">Загрузка…</p>}
       {isError && <p className="text-dire">Не удалось загрузить турниры</p>}
