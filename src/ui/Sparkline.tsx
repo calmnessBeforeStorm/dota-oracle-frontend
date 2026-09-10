@@ -22,21 +22,20 @@ const WIDTH = 200
  * колебание в три процентных пункта в драматический обвал.
  */
 export function Sparkline({ points, outcome, height = 48 }: Props) {
-  if (points.length === 0) {
+  const head = points[0]
+  const tail = points[points.length - 1]
+  if (!head || !tail) {
     return <svg viewBox={`0 0 ${WIDTH} ${height}`} className="w-full" role="presentation" />
   }
 
-  const first = points[0].minute
-  const last = points[points.length - 1].minute
-  const span = last - first || 1
+  const span = tail.minute - head.minute || 1
 
-  const x = (p: Point) => ((p.minute - first) / span) * WIDTH
+  const x = (p: Point) => ((p.minute - head.minute) / span) * WIDTH
   const y = (p: Point) => (1 - p.p_radiant) * height
 
   const d = points
     .map((p, i) => `${i === 0 ? 'M' : 'L'}${x(p).toFixed(1)},${y(p).toFixed(1)}`)
     .join(' ')
-  const tail = points[points.length - 1]
 
   return (
     <svg viewBox={`0 0 ${WIDTH} ${height}`} className="w-full" role="presentation">
