@@ -220,7 +220,8 @@ export interface TournamentSummary {
   last_match: string | null
   maps: number
   stages: number
-  status: 'current' | 'upcoming' | 'past'
+  /** Two states only: an unstarted tournament has no Valve league_id, so we never see it. */
+  status: 'current' | 'past'
 }
 
 export interface SeriesResult {

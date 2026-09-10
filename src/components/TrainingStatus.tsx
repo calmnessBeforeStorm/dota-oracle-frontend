@@ -35,7 +35,12 @@ function GateVerdict({ training }: { training: ModelTraining }) {
   if (!training.passes_gate) {
     return (
       <div className="border-t border-neutral-800/70 px-4 py-2">
-        <div className="text-sm text-red-300/90">
+        {/*
+          Не красный: красный принадлежит Dire, и вердикт о модели, выкрашенный в цвет
+          стороны, читается как утверждение о матче. Провал — самая важная строка блока,
+          поэтому выделен яркостью и насыщенностью, а не цветом.
+        */}
+        <div className="text-sm font-medium text-neutral-100">
           Гейт не пройден — {comparisonsLabel(training.gate_failures.length)}
         </div>
         <ul className="mt-1 space-y-0.5 text-xs text-neutral-500">

@@ -44,10 +44,7 @@ export const modelMetricsQuery = (version?: string) =>
     staleTime: 5 * 60_000,
   })
 
-export const tournamentsQuery = (
-  status: 'current' | 'upcoming' | 'past' | 'all',
-  tier?: string,
-) =>
+export const tournamentsQuery = (status: 'current' | 'past' | 'all', tier?: string) =>
   queryOptions({
     queryKey: ['tournaments', status, tier ?? 'any'],
     // `tier` is omitted rather than sent empty: the endpoint treats any value as a filter,
