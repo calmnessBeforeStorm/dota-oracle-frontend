@@ -1,7 +1,21 @@
 # dota-oracle-frontend
 
+**Live win-probability estimation for professional Dota 2 matches.**
+Open-source, non-commercial, no betting or wagering functionality.
+
+Tournament metadata (tier, stage, series format) is sourced from
+[Liquipedia](https://liquipedia.net/dota2) under CC-BY-SA. The service does not
+reproduce Liquipedia's pages or brackets — it links to them.
+
+React 18 · TypeScript · Vite · TanStack Query/Router · Tailwind · Recharts
+
+*Documentation below is in Russian.*
+
+---
+
 SPA сервиса прогнозирования матчей Dota 2 Tier 1: лента идущих матчей с вероятностью победы,
-карточка матча с кривой по минутам, календарь турниров и публичный дашборд точности модели.
+карточка матча с кривой по минутам, публичный дашборд точности модели и турнирный календарь
+со ссылками на Liquipedia.
 
 React 18 · TypeScript · Vite · TanStack Query/Router · Tailwind · Recharts.
 
@@ -45,6 +59,10 @@ docker build -t dota-oracle-frontend .
 
 Образ отдаёт статику через nginx и проксирует `/api` и `/ws` на сервис `api` — конфиг в
 [nginx.conf](nginx.conf).
+
+## Лицензия
+
+MIT — см. [LICENSE](LICENSE).
 
 ## Атрибуция
 
