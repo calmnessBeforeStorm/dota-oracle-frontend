@@ -5,7 +5,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: 'var(--base)',
+        // Не `base`: это имя занято встроенной утилитой размера `text-base`, и цвет с
+        // таким именем перекрывает её — текст красится в подложку и теряет размер.
+        ground: 'var(--base)',
         raised: 'var(--raised)',
         line: 'var(--line)',
         ink: {

@@ -14,7 +14,7 @@ interface Props {
 }
 
 const LEVELS: Record<Level, string> = {
-  base: 'bg-base',
+  base: 'bg-ground',
   raised: 'bg-raised',
   lit: 'bg-raised',
 }
