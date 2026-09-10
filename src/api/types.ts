@@ -23,6 +23,13 @@ export interface LiveMatch {
   model_version: string
   minute: number
   tier: string
+  /**
+   * Матчей в нашей истории у менее опытной из двух команд.
+   *
+   * Лента приходит отсортированной по этому числу: тир упорядочить её не может,
+   * потому что почти у всех идущих лиг он неизвестен.
+   */
+  team_history: number
   series: Series
   /**
    * Valve's broadcast delay. Our numbers run ahead of what the viewer sees, so the UI has to
