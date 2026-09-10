@@ -5,6 +5,7 @@ import { Link, createRoute } from '@tanstack/react-router'
 import { tournamentsQuery } from '@/api/queries'
 import type { TournamentSummary } from '@/api/types'
 import { TierBadge } from '@/components/TierBadge'
+import { tournamentsLabel } from '@/lib/metrics'
 import { cn, formatPrizePool, formatDateRange } from '@/lib/utils'
 import { rootRoute } from './root'
 
@@ -139,7 +140,9 @@ function TournamentsPage() {
       </p>
 
       {isLoading && <p className="text-neutral-500">Загрузка…</p>}
-      {isError && <p className="text-dire">Не удалось загрузить турниры</p>}
+      {/* Не красный: красный принадлежит Dire, и отказ в его цвете читается как
+          утверждение о матче. Тот же довод, что в Pending.Failed. */}
+      {isError && <p className="text-neutral-300">Не удалось загрузить турниры</p>}
 
       {data && data.length === 0 && (
         <p className="rounded-lg border border-dashed border-neutral-800 py-16 text-center text-neutral-500">
@@ -149,7 +152,7 @@ function TournamentsPage() {
 
       {data && data.length > 0 && (
         <>
-          <p className="text-sm text-neutral-500">{data.length} турниров</p>
+          <p className="text-sm text-neutral-500">{tournamentsLabel(data.length)}</p>
           <div className="space-y-2">
             {data.map((tournament) => (
               <TournamentRow key={tournament.league_id} tournament={tournament} />
