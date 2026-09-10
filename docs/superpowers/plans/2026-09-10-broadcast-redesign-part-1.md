@@ -23,7 +23,7 @@
 - **Tailwind остаётся 3.x.** Миграции на v4 в этом плане нет.
 - **Recharts не появляется на главной.** Спарклайн пишется руками.
 - **Коммиты на английском**, в императиве, без трейлеров об авторстве ИИ. `user.email` в обоих репозиториях уже локально проставлен.
-- **Ветки:** работа фронта ветвится от `development`; бэкенд-задачи (7–8) — отдельная ветка и отдельный PR в репозитории `dota-oracle-backend`. Прямых коммитов в `development` и любых действий с `main` нет.
+- **Ветки:** спека и этот план лежат на `docs/broadcast-redesign`, которая ещё не в `development`. Поэтому рабочая ветка фронта ветвится **от `docs/broadcast-redesign`**, а не от `development` — иначе у исполнителя не будет в дереве плана, который он исполняет. Если владелец сначала смерджит документацию в `development`, ветвиться нужно оттуда. Бэкенд-задачи (6–7) — своя ветка от `development` и отдельный PR в репозитории `dota-oracle-backend`. Прямых коммитов в `development` и любых действий с `main` нет.
 
 ## File Structure
 
@@ -782,7 +782,7 @@ git switch -c feature/recent-matches
 ```python
 class RecentMatch(BaseModel): ...          # в app/schemas/common.py
 async def recent_matches(session: AsyncSession, limit: int = 20) -> list[RecentMatch]
-def pick_tenth_minute(curve: list[PredictionPoint]) -> float | None
+def pick_tenth_minute(curve: list[PredictionPoint]) -> PredictionPoint | None
 def thin(curve: list[PredictionPoint], target: int = 30) -> list[PredictionPoint]
 ```
 
@@ -840,7 +840,9 @@ async def add(
 
 class TestTenthMinute:
     def test_takes_the_first_point_at_or_after_ten(self) -> None:
-        assert pick_tenth_minute([point(4), point(11, 0.62), point(20)]) == 0.62
+        picked = pick_tenth_minute([point(4), point(11, 0.62), point(20)])
+        assert picked is not None
+        assert picked.p_radiant == 0.62
 
     def test_dashes_when_the_minute_is_missing(self) -> None:
         # Подставить минуту 22 под подписью «на 10-й минуте» невозможно заметить снаружи.
@@ -850,7 +852,9 @@ class TestTenthMinute:
         assert pick_tenth_minute([]) is None
 
     def test_accepts_the_far_edge_of_the_bucket(self) -> None:
-        assert pick_tenth_minute([point(14, 0.7)]) == 0.7
+        picked = pick_tenth_minute([point(14, 0.7)])
+        assert picked is not None
+        assert picked.minute == 14
 
 
 class TestThin:
@@ -929,6 +933,9 @@ class RecentMatch(BaseModel):
     #: Вероятность за Radiant на 10-й минуте, если она есть. None рисуется прочерком:
     #: соседняя минута под этой подписью была бы подменой, незаметной снаружи.
     p_at_ten: float | None = None
+    #: Версия, выдавшая **именно** точку десятой минуты, а не «версия матча»: живой матч
+    #: может быть предсказан двумя версиями подряд, и общей у них нет. Пустая строка, когда
+    #: десятой минуты нет.
     model_version: str
 ```
 
@@ -964,16 +971,19 @@ TENTH_MINUTE = 10
 TENTH_MINUTE_LAST = 14
 
 
-def pick_tenth_minute(curve: list[PredictionPoint]) -> float | None:
+def pick_tenth_minute(curve: list[PredictionPoint]) -> PredictionPoint | None:
     """Первая точка внутри корзины 10–14, или None.
 
     None означает прочерк на карточке. Подстановка минуты 3 или 22 под подписью «на 10-й
     минуте» — враньё того же рода, от которого страхует инвариант о дашборде, и заметить
     его снаружи невозможно.
+
+    Возвращается точка целиком, а не одно число: карточка обязана назвать **ту** версию
+    модели, которая сделала именно это утверждение.
     """
     for point in curve:
         if TENTH_MINUTE <= point.minute <= TENTH_MINUTE_LAST:
-            return point.p_radiant
+            return point
     return None
 
 
@@ -1015,7 +1025,10 @@ async def recent_matches(session: AsyncSession, limit: int = 20) -> list[RecentM
     }
 
     curves: dict[int, list[PredictionPoint]] = {match_id: [] for match_id in match_ids}
-    versions: dict[int, str] = {}
+    # Версия хранится поминутно, а не на матч. Живой матч может быть предсказан двумя
+    # версиями подряд (промоушен посреди игры), и тогда «версия матча» — величина, которой
+    # не существует. Карточка называет версию ровно того утверждения, которое печатает.
+    versions: dict[tuple[int, int], str] = {}
     rows = (
         await session.execute(
             select(
@@ -1036,7 +1049,7 @@ async def recent_matches(session: AsyncSession, limit: int = 20) -> list[RecentM
                 minute=int(minute), p_radiant=float(p_radiant), predicted_at=predicted_at
             )
         )
-        versions[match_id] = version
+        versions[(match_id, int(minute))] = version
 
     team_ids = {
         team_id
@@ -1075,6 +1088,7 @@ async def recent_matches(session: AsyncSession, limit: int = 20) -> list[RecentM
     for match_id in match_ids:
         match = matches[match_id]
         curve = curves[match_id]
+        tenth = pick_tenth_minute(curve)
         league_name, tier = leagues.get(match.league_id or 0, (None, None))
         series = series_rows.get(match.series_id or 0)
         result.append(
@@ -1100,8 +1114,10 @@ async def recent_matches(session: AsyncSession, limit: int = 20) -> list[RecentM
                     is_conditional_game=bool(match.is_conditional_game),
                 ),
                 curve=thin(curve),
-                p_at_ten=pick_tenth_minute(curve),
-                model_version=versions.get(match_id, ""),
+                p_at_ten=tenth.p_radiant if tenth else None,
+                # Версия того самого утверждения. Нет десятой минуты — нет и версии:
+                # назвать чужую значило бы приписать модели чужие слова.
+                model_version=versions.get((match_id, tenth.minute), "") if tenth else "",
             )
         )
     return result
@@ -1793,7 +1809,9 @@ afterEach(() => vi.unstubAllGlobals())
 function stubApi(routes: Record<string, unknown>) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
     const path = new URL(String(input), 'http://localhost').pathname
-    const body = routes[path] ?? []
+    // `in`, а не `??`: заглушка null означает «ручка ответила пусто», и подменять её
+    // пустым массивом значит кормить компонент не тем, что он получит в жизни.
+    const body = path in routes ? routes[path] : []
     return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
   })
 }
@@ -1802,6 +1820,8 @@ describe('home page', () => {
   it('falls back to played matches when nothing is live', async () => {
     stubApi({
       '/api/matches/live': [],
+      // Полоса модели рисуется только при непустых метриках; здесь их нет.
+      '/api/model/metrics': null,
       '/api/matches/recent': [
         {
           match_id: 1,
@@ -1829,7 +1849,7 @@ describe('home page', () => {
   })
 
   it('says the feed only covers matches it predicted', async () => {
-    stubApi({ '/api/matches/live': [], '/api/matches/recent': [] })
+    stubApi({ '/api/matches/live': [], '/api/matches/recent': [], '/api/model/metrics': null })
     renderHome()
     await waitFor(() =>
       expect(screen.getByText(/по которым мы дали прогноз/i)).toBeInTheDocument(),
