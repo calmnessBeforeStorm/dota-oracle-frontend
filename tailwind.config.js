@@ -25,8 +25,10 @@ export default {
         micro: ['0.75rem', { lineHeight: '1.4' }],
       },
       boxShadow: {
-        'lit-radiant': '0 0 40px -12px var(--radiant)',
-        'lit-dire': '0 0 40px -12px var(--dire)',
+        // Мягкая подсветка, а не обводка: на 40px с малым отрицательным сдвигом карточки
+        // читались как неоновые прямоугольники и спорили с главной цифрой.
+        'lit-radiant': '0 0 28px -22px var(--radiant)',
+        'lit-dire': '0 0 28px -22px var(--dire)',
       },
     },
   },

@@ -18,7 +18,13 @@ describe('Sparkline', () => {
 
   it('marks how the match ended', () => {
     const { container } = render(<Sparkline points={CURVE} outcome="radiant" />)
-    expect(container.querySelector('circle')).toBeTruthy()
+    // Хвост цветом победителя. Отметка исхода, а не вердикт о модели.
+    expect(container.querySelector('[data-outcome="radiant"]')).toBeTruthy()
+  })
+
+  it('marks nothing when the outcome is unknown', () => {
+    const { container } = render(<Sparkline points={CURVE} outcome={null} />)
+    expect(container.querySelector('[data-outcome]')).toBeNull()
   })
 
   it('draws nothing for an empty curve', () => {

@@ -29,9 +29,13 @@ export function PlayedMatchCard({ match }: { match: RecentMatch }) {
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <TierBadge tier={match.tier} />
-            <span className="truncate text-body text-ink-dim">
-              {match.league_name ?? `Лига ${match.league_id}`}
-            </span>
+            {/* Ни имени, ни номера — значит лига неизвестна. «Лига null» была бы
+                подписью, которая выглядит как данные и ими не является. */}
+            {(match.league_name ?? match.league_id) !== null && (
+              <span className="truncate text-body text-ink-dim">
+                {match.league_name ?? `Лига ${match.league_id}`}
+              </span>
+            )}
           </div>
           {match.started_at && (
             <span className="font-mono text-micro text-ink-faint">
