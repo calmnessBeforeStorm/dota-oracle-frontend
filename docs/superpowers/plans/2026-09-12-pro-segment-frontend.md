@@ -564,6 +564,9 @@ Replace the test `'falls back to played matches when nothing is live'` with:
     })
     renderHome()
     expect(await screen.findByText('Последний матч')).toBeInTheDocument()
+    // A short notice above it, not the tall empty card the review replaces.
+    expect(screen.getByText(/Сейчас матчей Tier 1 нет/)).toBeInTheDocument()
+    expect(screen.queryByText(/Матчей Tier 1 сейчас нет/)).not.toBeInTheDocument()
     // The one match is in the review, not repeated as a card below it.
     expect(screen.queryByText(/на 10-й минуте/)).not.toBeInTheDocument()
   })
@@ -668,6 +671,28 @@ In `src/routes/live.tsx`:
   const [latest, ...older] = playedMatches
   const review = liveMatches.length === 0 ? latest : undefined
   const playedCards = review ? older : playedMatches
+```
+
+- in «Идут сейчас», replace the `Empty` branch of the `liveMatches.length > 0 ? (...) : (<Empty ... />)` ternary so that a review gets a one-line notice instead of the tall card (the owner chose this layout from a mockup: a short line, then the review):
+
+```tsx
+        ) : review ? (
+          // One line, not the tall empty card: the review below is what fills the space.
+          <p className="text-body text-ink-faint">
+            Сейчас матчей {selectedLabels} нет
+            {hidden > 0 &&
+              ` · идут ${hidden} матчей в турнирах других уровней — включите их фильтром выше`}
+          </p>
+        ) : (
+          <Empty
+            title={`Матчей ${selectedLabels} сейчас нет`}
+            hint={
+              hidden > 0
+                ? `Идут ${hidden} матчей в турнирах других уровней — включите их фильтром выше, если нужно`
+                : 'Валв не отдаёт ни одной идущей лиговой игры прямо сейчас'
+            }
+          />
+        )}
 ```
 
 - between the closing `</section>` of «Идут сейчас» and the «Сыграно» `<section>`, add:
