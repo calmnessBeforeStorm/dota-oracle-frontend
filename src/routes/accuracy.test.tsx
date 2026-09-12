@@ -3,12 +3,13 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { ModelMetrics } from '@/api/types'
 import { accuracyRoute } from './accuracy'
 import { liveRoute } from './live'
 import { matchRoute } from './match'
 import { rootRoute } from './root'
 
-const TIER1_EMPTY = {
+const TIER1_EMPTY: ModelMetrics = {
   model_version: 'lgbm-20260901-102407',
   sample_size: 0,
   matches: 0,
@@ -114,5 +115,11 @@ describe('accuracy segments', () => {
     // Log loss appears twice - the tile and the per-minute table - so findAll, not find.
     expect((await screen.findAllByText('0.6100')).length).toBeGreaterThan(0)
     expect(screen.getByText(/контрольная группа/)).toBeInTheDocument()
+    // The pill and the numbers must agree - `active` is derived from data.segment, not local
+    // state, precisely so this can never go stale.
+    expect(screen.getByRole('button', { name: /Excluded/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 })

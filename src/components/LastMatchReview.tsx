@@ -22,7 +22,10 @@ const DAY_MONTH = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'sho
 export function LastMatchReview({ match }: { match: RecentMatch }) {
   const detail = useQuery(matchDetailQuery(match.match_id))
   const curve = detail.data?.curve ?? match.curve
-  const decided = decidedMinute(curve, match.radiant_win)
+  // The thinned feed curve can skip the dip that decided the match, so the caption is a claim
+  // that must wait for the full curve - only the chart draws the thinned one in the meantime.
+  const full = detail.data?.curve
+  const decided = full ? decidedMinute(full, match.radiant_win) : { kind: 'none' as const }
   const label = decidedLabel(decided)
   const winnerSide = match.radiant_win ? 'radiant' : 'dire'
   const winner = match.radiant_win ? match.radiant : match.dire

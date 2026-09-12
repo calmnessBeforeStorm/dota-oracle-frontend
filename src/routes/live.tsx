@@ -8,6 +8,7 @@ import { MatchCard } from '@/components/MatchCard'
 import { ModelStrip } from '@/components/ModelStrip'
 import { PlayedMatchCard } from '@/components/PlayedMatchCard'
 import { TierFilter } from '@/components/TierFilter'
+import { matchesLabel } from '@/lib/metrics'
 import {
   TIER_OPTIONS,
   normaliseTier,
@@ -88,14 +89,14 @@ function HomePage() {
           <p className="text-body text-ink-faint">
             Сейчас матчей {selectedLabels} нет
             {hidden > 0 &&
-              ` · идут ${hidden} матчей в турнирах других уровней — включите их фильтром выше`}
+              ` · ${hidden === 1 ? 'идёт' : 'идут'} ${matchesLabel(hidden)} в турнирах других уровней — включите их фильтром выше`}
           </p>
         ) : (
           <Empty
             title={`Матчей ${selectedLabels} сейчас нет`}
             hint={
               hidden > 0
-                ? `Идут ${hidden} матчей в турнирах других уровней — включите их фильтром выше, если нужно`
+                ? `${hidden === 1 ? 'Идёт' : 'Идут'} ${matchesLabel(hidden)} в турнирах других уровней — включите их фильтром выше, если нужно`
                 : 'Валв не отдаёт ни одной идущей лиговой игры прямо сейчас'
             }
           />

@@ -124,7 +124,7 @@ function AccuracyPage() {
         <div className="flex flex-wrap gap-2" role="group" aria-label="Сегмент">
           {SEGMENT_OPTIONS.map((option) => {
             const count =
-              data.segments.find((item) => item.segment === option.key)?.matches ?? 0
+              (data.segments ?? []).find((item) => item.segment === option.key)?.matches ?? 0
             const active = option.key === data.segment
             return (
               <button

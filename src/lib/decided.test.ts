@@ -45,6 +45,11 @@ describe('decidedMinute', () => {
     expect(decidedMinute(curve([12, 0.3]), true)).toEqual({ kind: 'never' })
   })
 
+  it('finds the last crossing, not the first, when the winner dips twice', () => {
+    const points = curve([0, 0.6], [10, 0.4], [20, 0.6], [30, 0.4], [40, 0.8])
+    expect(decidedMinute(points, true)).toEqual({ kind: 'decided', minute: 40 })
+  })
+
   it('does not trust the order the points arrived in', () => {
     const points = curve([35, 0.8], [0, 0.6], [27, 0.55], [10, 0.4], [20, 0.45])
     expect(decidedMinute(points, true)).toEqual({ kind: 'decided', minute: 27 })

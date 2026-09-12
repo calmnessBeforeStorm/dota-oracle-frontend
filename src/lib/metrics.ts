@@ -79,7 +79,7 @@ export function segmentLabel(key: string): string {
 
 /** "в Pro — 14 матчей, в Excluded — 249 матчей", or null when no other slice has data. */
 export function otherSegmentsSummary(data: ModelMetrics): string | null {
-  const parts = data.segments
+  const parts = (data.segments ?? [])
     .filter((count) => count.segment !== data.segment && count.matches > 0)
     .map((count) => `в ${segmentLabel(count.segment)} — ${matchesLabel(count.matches)}`)
   return parts.length > 0 ? parts.join(', ') : null

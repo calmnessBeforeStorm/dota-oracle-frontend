@@ -100,6 +100,13 @@ describe('LastMatchReview', () => {
   it('reads the turning point off the full curve, not the thinned one', async () => {
     stubDetail(FULL_CURVE)
     renderReview(MATCH)
+    // Wait for the router to mount the route (always async, even with no loader) using text
+    // that renders regardless of the curve, then check synchronously - before the detail
+    // request has had a chance to resolve - that the wrong caption never appeared alongside
+    // the thinned curve. `findByText` below waits for the right label and would pass even if
+    // a wrong one flashed first, so this is what actually exercises item 1's behaviour.
+    await screen.findByText('Последний матч')
+    expect(screen.queryByText('Фаворит с первой минуты')).not.toBeInTheDocument()
     expect(await screen.findByText('Решён с 27-й минуты')).toBeInTheDocument()
   })
 
