@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 
+import type { Tier } from '@/lib/tiers'
 import { apiGet } from './client'
 import type {
   LiveMatch,
@@ -19,14 +20,20 @@ export const liveMatchesQuery = () =>
     refetchInterval: 30_000,
   })
 
-export const recentMatchesQuery = (limit = 20) =>
-  queryOptions({
-    queryKey: ['matches', 'recent', limit],
-    queryFn: () => apiGet<RecentMatch[]>('/matches/recent', { limit: String(limit) }),
-    // Лента сыгранных меняется, только когда матч закончился и исход приехал из внешнего
-    // источника, — это минуты, а не секунды.
+export const recentMatchesQuery = (limit = 20, tiers?: Tier[]) => {
+  // Sorted so that chip order does not split one question into two cache entries.
+  const wanted = tiers && tiers.length > 0 ? [...tiers].sort().join(',') : undefined
+  return queryOptions({
+    queryKey: ['matches', 'recent', limit, wanted ?? 'all'],
+    // Filtered on the server: the twenty newest matches can hold no Tier 1 at all while
+    // older ones do, and a client-side filter would then show nothing.
+    queryFn: () =>
+      apiGet<RecentMatch[]>('/matches/recent', { limit: String(limit), tiers: wanted }),
+    // The played feed changes only when a match has ended and its outcome has arrived from an
+    // external source - minutes, not seconds.
     staleTime: 5 * 60_000,
   })
+}
 
 export const matchDetailQuery = (matchId: number) =>
   queryOptions({

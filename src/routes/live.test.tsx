@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { accuracyRoute } from './accuracy'
 import { liveRoute } from './live'
@@ -26,14 +26,36 @@ afterEach(() => {
   localStorage.clear()
 })
 
+const requested: URL[] = []
+
+beforeEach(() => {
+  requested.length = 0
+  // The latest-match review draws a Recharts chart; jsdom has no ResizeObserver.
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  )
+})
+
 function stubApi(routes: Record<string, unknown>) {
   vi.stubGlobal('fetch', (input: RequestInfo | URL) => {
-    const path = new URL(String(input), 'http://localhost').pathname
-    // `in`, а не `??`: заглушка null означает «ручка ответила пусто», и подменять её
-    // пустым массивом значит кормить компонент не тем, что он получит в жизни.
-    const body = path in routes ? routes[path] : []
+    const url = new URL(String(input), 'http://localhost')
+    requested.push(url)
+    // `in`, not `??`: a null stub means "the endpoint answered empty", and swapping it for an
+    // empty array would feed the component something it never gets in production.
+    const body = url.pathname in routes ? routes[url.pathname] : []
     return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }))
   })
+}
+
+function recentTiers(): string[][] {
+  return requested
+    .filter((url) => url.pathname === '/api/matches/recent')
+    .map((url) => (url.searchParams.get('tiers') ?? '').split(',').sort())
 }
 
 const PLAYED = {
@@ -61,19 +83,31 @@ const PLAYED = {
 }
 
 describe('home page', () => {
-  it('falls back to played matches when nothing is live', async () => {
+  it('shows the latest played match large when nothing is live', async () => {
     stubApi({
       '/api/matches/live': [],
-      // Полоса модели рисуется только при непустых метриках; здесь их нет.
       '/api/model/metrics': null,
       '/api/matches/recent': [PLAYED],
     })
     renderHome()
-    // Экран, построенный вокруг одной цифры, без неё не должен выглядеть поломанным.
-    // Проверяется подписью карточки сыгранного матча: имя команды на ней стоит дважды —
-    // в шапке и в «за …», — и по нему тест ловил бы неоднозначность, а не смысл.
-    expect(await screen.findByText(/на 10-й минуте/)).toBeInTheDocument()
-    expect(screen.getByText('62.0%')).toBeInTheDocument()
+    expect(await screen.findByText('Последний матч')).toBeInTheDocument()
+    // A short notice above it, not the tall empty card the review replaces.
+    expect(screen.getByText(/Сейчас матчей Tier 1 нет/)).toBeInTheDocument()
+    expect(screen.queryByText(/Матчей Tier 1 сейчас нет/)).not.toBeInTheDocument()
+    // The one match is in the review, not repeated as a card below it.
+    expect(screen.queryByText(/на 10-й минуте/)).not.toBeInTheDocument()
+  })
+
+  it('keeps older played matches as cards under the review', async () => {
+    stubApi({
+      '/api/matches/live': [],
+      '/api/model/metrics': null,
+      '/api/matches/recent': [PLAYED, { ...PLAYED, match_id: 2, league_name: 'ESL One 2026' }],
+    })
+    renderHome()
+    expect(await screen.findByText('Последний матч')).toBeInTheDocument()
+    expect(await screen.findByText('ESL One 2026')).toBeInTheDocument()
+    expect(screen.getAllByText(/на 10-й минуте/)).toHaveLength(1)
   })
 
   it('says the feed only covers matches it predicted', async () => {
@@ -176,5 +210,36 @@ describe('фильтр по тиру в живой ленте', () => {
 
     renderHome()
     expect(await screen.findByText('bottle cup')).toBeInTheDocument()
+  })
+})
+
+describe('played feed follows the tier chips', () => {
+  it('asks the server for Tier 1 by default', async () => {
+    stubApi({ '/api/matches/live': [], '/api/matches/recent': [], '/api/model/metrics': null })
+    renderHome()
+    await screen.findByText(/Сверенных матчей пока нет/i)
+    expect(recentTiers()).toContainEqual(['tier1'])
+  })
+
+  it('asks again with the added chip', async () => {
+    stubApi({
+      '/api/matches/live': [liveMatch('tier1', 1, 'The International 2026')],
+      '/api/matches/recent': [],
+      '/api/model/metrics': null,
+    })
+    renderHome()
+    fireEvent.click(await screen.findByRole('button', { name: /Без разметки/ }))
+    await waitFor(() => expect(recentTiers()).toContainEqual(['tier1', 'unknown']))
+  })
+
+  it('shows the played cards without a review while something is live', async () => {
+    stubApi({
+      '/api/matches/live': [liveMatch('tier1', 1, 'The International 2026')],
+      '/api/matches/recent': [PLAYED],
+      '/api/model/metrics': null,
+    })
+    renderHome()
+    expect(await screen.findByText(/на 10-й минуте/)).toBeInTheDocument()
+    expect(screen.queryByText('Последний матч')).not.toBeInTheDocument()
   })
 })

@@ -24,6 +24,11 @@ export interface LiveMatch {
   minute: number
   tier: string
   /**
+   * Valve's league tier from OpenDota /leagues. The server already drops everything but
+   * professional and premium leagues from the feed; null means the tier is not known yet.
+   */
+  valve_tier: string | null
+  /**
    * Матчей в нашей истории у менее опытной из двух команд.
    *
    * Лента приходит отсортированной по этому числу: тир упорядочить её не может,
