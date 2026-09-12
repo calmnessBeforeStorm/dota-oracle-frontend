@@ -28,6 +28,16 @@ import { rootRoute } from './root'
  * into looking better than it is - an empty slice says so instead of showing zeroes, and
  * every row carries the sample size it was computed from.
  */
+/** Shared look for the version and segment pill rows - they are meant to look identical. */
+function pillButtonClass(active: boolean): string {
+  return cn(
+    'rounded-full border px-3 py-1 text-sm transition-colors',
+    active
+      ? 'border-neutral-600 bg-neutral-800 text-neutral-100'
+      : 'border-neutral-800 text-neutral-400 hover:border-neutral-700',
+  )
+}
+
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3">
@@ -101,12 +111,7 @@ function AccuracyPage() {
               key={info.version}
               type="button"
               onClick={() => setVersion(info.version)}
-              className={cn(
-                'rounded-full border px-3 py-1 text-sm transition-colors',
-                info.version === data.model_version
-                  ? 'border-neutral-600 bg-neutral-800 text-neutral-100'
-                  : 'border-neutral-800 text-neutral-400 hover:border-neutral-700',
-              )}
+              className={pillButtonClass(info.version === data.model_version)}
             >
               <span className="font-mono">{info.version}</span>
               <span className="ml-2 text-xs text-neutral-500">{info.sample_size}</span>
@@ -127,12 +132,7 @@ function AccuracyPage() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => setSegment(option.key)}
-                className={cn(
-                  'rounded-full border px-3 py-1 text-sm transition-colors',
-                  active
-                    ? 'border-neutral-600 bg-neutral-800 text-neutral-100'
-                    : 'border-neutral-800 text-neutral-400 hover:border-neutral-700',
-                )}
+                className={pillButtonClass(active)}
               >
                 {option.label}
                 <span className="ml-2 text-xs text-neutral-500">{count}</span>
