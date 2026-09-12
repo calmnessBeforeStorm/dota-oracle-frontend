@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query'
+import { keepPreviousData, queryOptions } from '@tanstack/react-query'
 
 import type { Tier } from '@/lib/tiers'
 import { apiGet } from './client'
@@ -7,6 +7,7 @@ import type {
   MatchDetail,
   ModelMetrics,
   RecentMatch,
+  Segment,
   TournamentDetail,
   TournamentSummary,
 } from './types'
@@ -41,13 +42,12 @@ export const matchDetailQuery = (matchId: number) =>
     queryFn: () => apiGet<MatchDetail>(`/matches/${matchId}`),
   })
 
-export const modelMetricsQuery = (version?: string) =>
+export const modelMetricsQuery = (version?: string, segment: Segment = 'tier1') =>
   queryOptions({
-    queryKey: ['model', 'metrics', version ?? 'served'],
-    queryFn: () =>
-      apiGet<ModelMetrics>(
-        version ? `/model/metrics?version=${encodeURIComponent(version)}` : '/model/metrics',
-      ),
+    queryKey: ['model', 'metrics', version ?? 'served', segment],
+    queryFn: () => apiGet<ModelMetrics>('/model/metrics', { version, segment }),
+    // Switching a pill keeps the page on screen instead of flashing "loading".
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
   })
 

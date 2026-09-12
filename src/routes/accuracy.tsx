@@ -3,10 +3,18 @@ import { createRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { modelMetricsQuery } from '@/api/queries'
-import type { ModelMetrics } from '@/api/types'
+import type { ModelMetrics, Segment } from '@/api/types'
 import { CalibrationChart } from '@/components/CalibrationChart'
 import { TrainingStatus } from '@/components/TrainingStatus'
-import { formatMetric, isSmallSample, matchesLabel, versionChoices } from '@/lib/metrics'
+import {
+  SEGMENT_OPTIONS,
+  formatMetric,
+  isSmallSample,
+  matchesLabel,
+  otherSegmentsSummary,
+  segmentLabel,
+  versionChoices,
+} from '@/lib/metrics'
 import { cn } from '@/lib/utils'
 import { rootRoute } from './root'
 
@@ -32,17 +40,29 @@ function Metric({ label, value, hint }: { label: string; value: string; hint?: s
 
 function EmptyState({ data }: { data: ModelMetrics }) {
   const elsewhere = data.versions.filter((v) => v.version !== data.model_version)
+  const others = otherSegmentsSummary(data)
 
   return (
     <div className="rounded-lg border border-dashed border-neutral-800 px-6 py-12 text-center">
       <p className="text-neutral-400">
-        У версии <span className="font-mono">{data.model_version}</span> пока нет прогнозов,
-        сверенных с исходом.
+        В {segmentLabel(data.segment)} сверенных матчей пока нет · версия{' '}
+        <span className="font-mono">{data.model_version}</span>
       </p>
+      {others && (
+        <p className="mt-3 text-sm text-neutral-400">
+          Сверено {others} — переключатель сегментов выше.
+        </p>
+      )}
+      {data.unsegmented_matches > 0 && (
+        <p className="mt-2 text-sm text-neutral-500">
+          Ещё {matchesLabel(data.unsegmented_matches)} без известного тира лиги — ни в один
+          сегмент они не входят.
+        </p>
+      )}
       <p className="mx-auto mt-3 max-w-xl text-sm text-neutral-500">
         Прогноз попадает сюда только после того, как его матч завершился и результат приехал из
-        внешнего источника. Показывать вместо этого калибровку прошлой версии нельзя: она ничего
-        не говорит о числах, которые вы видите на сайте сейчас.
+        внешнего источника. Показывать вместо этого калибровку прошлой версии или другого сегмента
+        нельзя: она ничего не говорит о числах, которые вы видите на сайте сейчас.
       </p>
       {elsewhere.length > 0 && (
         <p className="mt-3 text-sm text-neutral-500">
@@ -55,7 +75,8 @@ function EmptyState({ data }: { data: ModelMetrics }) {
 
 function AccuracyPage() {
   const [version, setVersion] = useState<string | undefined>(undefined)
-  const { data, isLoading } = useQuery(modelMetricsQuery(version))
+  const [segment, setSegment] = useState<Segment>('tier1')
+  const { data, isLoading } = useQuery(modelMetricsQuery(version, segment))
 
   if (isLoading) return <p className="text-neutral-500">Загрузка…</p>
   if (!data) return <p className="text-neutral-500">Метрики недоступны</p>
@@ -93,6 +114,39 @@ function AccuracyPage() {
           ))}
         </div>
       )}
+
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Сегмент">
+          {SEGMENT_OPTIONS.map((option) => {
+            const count =
+              data.segments.find((item) => item.segment === option.key)?.matches ?? 0
+            const active = option.key === data.segment
+            return (
+              <button
+                key={option.key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setSegment(option.key)}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-sm transition-colors',
+                  active
+                    ? 'border-neutral-600 bg-neutral-800 text-neutral-100'
+                    : 'border-neutral-800 text-neutral-400 hover:border-neutral-700',
+                )}
+              >
+                {option.label}
+                <span className="ml-2 text-xs text-neutral-500">{count}</span>
+              </button>
+            )
+          })}
+        </div>
+        {data.segment === 'excluded' && (
+          <p className="text-xs text-neutral-500">
+            Excluded — контрольная группа: лиги вне домена обучения (любительские турниры, которые
+            Valve не считает профессиональными). Эти цифры — не точность продукта.
+          </p>
+        )}
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-4">
         <Metric label="Версия модели" value={data.model_version} />
