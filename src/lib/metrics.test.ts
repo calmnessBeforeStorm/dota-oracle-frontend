@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ModelMetrics } from '@/api/types'
-import { formatMetric, isSmallSample, tournamentsLabel, versionChoices } from './metrics'
+import {
+  formatMetric,
+  isSmallSample,
+  otherSegmentsSummary,
+  segmentLabel,
+  tournamentsLabel,
+  versionChoices,
+} from './metrics'
 
 const empty: ModelMetrics = {
   model_version: 'live-v2',
@@ -17,6 +24,9 @@ const empty: ModelMetrics = {
   by_minute: [],
   reliability: [],
   versions: [],
+  segment: 'tier1',
+  segments: [],
+  unsegmented_matches: 0,
   training: null,
 }
 
@@ -95,5 +105,37 @@ describe('tournamentsLabel', () => {
   it('handles the teens, where the last digit lies', () => {
     expect(tournamentsLabel(11)).toBe('11 турниров')
     expect(tournamentsLabel(112)).toBe('112 турниров')
+  })
+})
+
+describe('segments', () => {
+  const withSegments = (segment: string, counts: [string, number][]): ModelMetrics => ({
+    ...empty,
+    segment,
+    segments: counts.map(([name, matches]) => ({ segment: name, matches })),
+  })
+
+  it('names segments the way the pills do', () => {
+    expect(segmentLabel('tier1')).toBe('Tier 1')
+    expect(segmentLabel('pro')).toBe('Pro')
+    expect(segmentLabel('excluded')).toBe('Excluded')
+  })
+
+  it('says where the data is when the selected slice is empty', () => {
+    const data = withSegments('tier1', [
+      ['tier1', 0],
+      ['pro', 14],
+      ['excluded', 249],
+    ])
+    expect(otherSegmentsSummary(data)).toBe('в Pro — 14 матчей, в Excluded — 249 матчей')
+  })
+
+  it('says nothing when no other slice has data either', () => {
+    const data = withSegments('tier1', [
+      ['tier1', 0],
+      ['pro', 0],
+      ['excluded', 0],
+    ])
+    expect(otherSegmentsSummary(data)).toBeNull()
   })
 })

@@ -43,6 +43,9 @@ function metrics(overrides: Partial<ModelMetrics> = {}): ModelMetrics {
     by_minute: [],
     reliability: [],
     versions: [],
+    segment: 'tier1',
+    segments: [],
+    unsegmented_matches: 0,
     training,
     ...overrides,
   }

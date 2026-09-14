@@ -24,6 +24,11 @@ export interface LiveMatch {
   minute: number
   tier: string
   /**
+   * Valve's league tier from OpenDota /leagues. The server already drops everything but
+   * professional and premium leagues from the feed; null means the tier is not known yet.
+   */
+  valve_tier: string | null
+  /**
    * Матчей в нашей истории у менее опытной из двух команд.
    *
    * Лента приходит отсортированной по этому числу: тир упорядочить её не может,
@@ -185,6 +190,14 @@ export interface ModelTraining {
   feature_count: number
 }
 
+/** Slices of the accuracy dashboard. Tier 1 is the product's domain; Excluded is the control group. */
+export type Segment = 'tier1' | 'pro' | 'excluded'
+
+export interface SegmentCount {
+  segment: string
+  matches: number
+}
+
 export interface ModelMetrics {
   model_version: string
   sample_size: number
@@ -203,6 +216,12 @@ export interface ModelMetrics {
   reliability: ReliabilityBin[]
   versions: ModelVersionInfo[]
   training: ModelTraining | null
+  /** The slice every number above is computed in. */
+  segment: string
+  /** Scored matches of this version per segment - all three, zeros included. */
+  segments: SegmentCount[]
+  /** Scored matches whose league had no known Valve tier: in no segment. */
+  unsegmented_matches: number
 }
 
 export interface TournamentStageInfo {

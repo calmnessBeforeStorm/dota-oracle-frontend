@@ -1,4 +1,4 @@
-import type { ModelMetrics, ModelVersionInfo } from '@/api/types'
+import type { ModelMetrics, ModelVersionInfo, Segment } from '@/api/types'
 
 /**
  * F6 formatting rules, kept out of the page so they can be tested.
@@ -60,4 +60,27 @@ export function tournamentsLabel(n: number): string {
 
 export function comparisonsLabel(n: number): string {
   return `${n} ${plural(n, 'сравнение', 'сравнения', 'сравнений')}`
+}
+
+/**
+ * Dashboard slices, in pill order. Excluded is kept - it is the control group that shows
+ * whether the model behaves differently outside the domain it was trained on - but it is never
+ * the default and never unlabelled.
+ */
+export const SEGMENT_OPTIONS: { key: Segment; label: string }[] = [
+  { key: 'tier1', label: 'Tier 1' },
+  { key: 'pro', label: 'Pro' },
+  { key: 'excluded', label: 'Excluded' },
+]
+
+export function segmentLabel(key: string): string {
+  return SEGMENT_OPTIONS.find((option) => option.key === key)?.label ?? key
+}
+
+/** "в Pro — 14 матчей, в Excluded — 249 матчей", or null when no other slice has data. */
+export function otherSegmentsSummary(data: ModelMetrics): string | null {
+  const parts = (data.segments ?? [])
+    .filter((count) => count.segment !== data.segment && count.matches > 0)
+    .map((count) => `в ${segmentLabel(count.segment)} — ${matchesLabel(count.matches)}`)
+  return parts.length > 0 ? parts.join(', ') : null
 }

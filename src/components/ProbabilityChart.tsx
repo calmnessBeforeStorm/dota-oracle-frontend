@@ -17,16 +17,21 @@ import { formatPercent } from '@/lib/utils'
 export function ProbabilityChart({
   curve,
   events = [],
+  marker = null,
+  height = 280,
 }: {
   curve: PredictionPoint[]
   events?: TimelineEvent[]
+  /** Minute to mark with a solid line - where a finished match turned. */
+  marker?: number | null
+  height?: number
 }) {
   if (curve.length === 0) {
     return <p className="py-12 text-center text-sm text-neutral-500">Прогнозов пока нет</p>
   }
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart data={curve} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
         <CartesianGrid stroke="#262626" vertical={false} />
         <XAxis
@@ -44,6 +49,9 @@ export function ProbabilityChart({
         />
         {/* The coin-flip line: everything above it favours Radiant. */}
         <ReferenceLine y={0.5} stroke="#404040" strokeDasharray="4 4" />
+        {/* Solid and neutral: the event markers are dashed and coloured by side, and this one
+            belongs to neither side - it is where the winner took the lead for good. */}
+        {marker !== null && <ReferenceLine x={marker} stroke="#a3a3a3" strokeWidth={1.5} />}
         {/* Events on the same axis as the curve: the point of the card is seeing *why* the
             line moved, and a separate list makes the reader do that join by eye. */}
         {chartMarkers(events).map((event, index) => {
